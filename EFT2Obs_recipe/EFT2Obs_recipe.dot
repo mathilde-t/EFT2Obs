@@ -1,0 +1,48 @@
+// Source of EFT2Obs_recipe.png
+// Rebuild: dot -Tpng -Gdpi=110 EFT2Obs_recipe.dot -o EFT2Obs_recipe.png
+digraph recipe {
+  graph [fontname="DejaVu Sans", fontsize=20, labelloc=t, nodesep=0.4, ranksep=0.45,
+         label=<EFT2Obs recipe: edit a file -&gt; rerun its step and everything below<br/>(example process: DYjets, Rivet routine: DY_EE)<br/> >];
+  node  [shape=box, style="rounded,filled", fontname="DejaVu Sans", fontsize=12, penwidth=1.2, margin="0.25,0.08"];
+  edge  [fontname="DejaVu Sans", fontsize=10, color="#444444", penwidth=1.3];
+
+  s0 [fillcolor="#e8e8e8", label=<<b>0. Every new terminal</b><br/><font face="DejaVu Sans Mono" point-size="10">. /cvmfs/sft.cern.ch/lcg/views/LCG_106/x86_64-el9-gcc13-opt/setup.sh<br/>cd ~/EFT2Obs &amp;&amp; source env.sh</font><br/><i>no CMSSW, python3 = 3.11</i>>];
+
+  s1 [fillcolor="#fde2c7", label=<<b>1. Model</b>  <i>(UFO)</i><br/><font face="DejaVu Sans Mono" point-size="10">./scripts/setup_model_SMEFTsim3.sh</font><br/>or unpack UFO into MG5_aMC_v2_9_16/models/>];
+
+  s2 [fillcolor="#fde2c7", label=<<b>2. Process</b>  <i>edit cards/DYjets/proc_card.dat</i><br/><font face="DejaVu Sans Mono" point-size="10">rm -rf MG5_aMC_v2_9_16/DYjets<br/>./scripts/setup_process.sh DYjets</font><br/>output name = cards folder name, keep NP&lt;=1>];
+
+  s3 [fillcolor="#fdf2b0", label=<<b>3. EFT operators</b>  <i>config.json</i><br/><b>a) auto</b> (recommended, also finds propagator-correction operators):<br/><font face="DejaVu Sans Mono" point-size="10">python scripts/auto_detect_operators.py -p DYjets [--noConfigJson = only print list]<br/>   -&gt; writes config.json + reweight_card.dat</font><br/><b>b) by hand</b>:<br/><font face="DejaVu Sans Mono" point-size="10">python scripts/make_config.py -p DYjets -o cards/DYjets/config.json --pars SMEFT:...<br/>python scripts/make_reweight_card.py cards/DYjets/config.json cards/DYjets/reweight_card.dat</font><br/><b>both</b>:<br/><font face="DejaVu Sans Mono" point-size="10">python scripts/make_param_card.py -p DYjets -c cards/DYjets/config.json -o cards/DYjets/param_card.dat</font>>];
+
+  s4 [fillcolor="#d5ecdc", label=<<b>4. Gridpack</b>  <i>edit run_card.dat (energy, PDF, cuts) / pythia8_card.dat</i><br/><font face="DejaVu Sans Mono" point-size="10">./scripts/make_gridpack.sh DYjets 0 4</font><br/>-&gt; gridpack_DYjets.tar.gz   <i>(any change in 1-4 needs a new gridpack)</i>>];
+
+  s5 [fillcolor="#d8e4f4", label=<<b>5. Rivet routine</b>  <i>edit RivetPlugins/DY_EE.cc (must end in .cc)</i><br/><font face="DejaVu Sans Mono" point-size="10">./scripts/setup_rivet_plugins.sh<br/>rivet --list-analyses DY_EE</font>>];
+
+  s6 [fillcolor="#e4d9f1", label=<<b>6. Generate + Rivet</b><br/><font face="DejaVu Sans Mono" point-size="10">python scripts/run_gridpack.py --gridpack gridpack_DYjets.tar.gz -s 1 -e 500 \\<br/>  -p DY_EE -o test-dy --save-hepmc hepmc-dy<br/>python scripts/launch_jobs.py ... -j N --job-mode interactive|condor</font>>];
+
+  s7 [fillcolor="#f5d5e0", label=<<b>7. Scaling functions</b><br/><font face="DejaVu Sans Mono" point-size="10">yodamerge -o test-dy/Rivet.yoda test-dy/Rivet_*.yoda<br/>for h in m_ee pT_ee y_ee cosThetaCS; do<br/>  python scripts/get_scaling.py -c cards/DYjets/config.json -i test-dy/Rivet.yoda \\<br/>  --hist "/DY_EE/$h" --save json,txt -o test-dy/scaling_$h; done</font><br/>-&gt; test-dy/scaling_*.json/.txt   <i>(step 6 already did the reweighting)</i>>];
+
+  s8 [fillcolor="#d2eaf0", label=<<b>8. Plots</b>  <i>axis titles: RivetPlugins/DY_EE.plot</i><br/><font face="DejaVu Sans Mono" point-size="10">rivet-mkhtml test-dy/Rivet.yoda:"Title=SM" -o test-dy/plots [--no-weights]<br/>cd test-dy; python ../scripts/makePlot.py --hist scaling_pT_ee.json \\<br/>  -c ../cards/DYjets/config.json --x-title "p_{T}^{ee} [GeV]" \\<br/>  --draw chj1=0.01:4 chwb=0.01:2 --translate ../resources/translate_root_DY.json</font><br/><b>Rivet plots</b> test-dy/plots/DY_EE/*.png: red = SM, faint = single weight terms (no labels, not hypotheses)<br/><b>EFT plots</b> test-dy/scaling_*.png: black = SM, one labelled line per --draw hypothesis>];
+
+  chk [fillcolor="#fde2c7", label=<<b>Sanity check (test run first!)</b><br/>enough entries per bin?  quadratic terms cX*cX &gt;= 0?  magnitudes sensible?<br/><i>DYjets test 2026-10-26: negative chdd*chdd, chu*chu at Z peak (cause not yet verified)</i>>];
+
+  app [fillcolor="#e2eed8", label=<<b>Apply EFT to a sample</b><br/><b>A</b> per bin: SM yield x (1 + A_i c_i + B_ij c_i c_j) from scaling_*.json<br/><b>B</b> per event: <font face="DejaVu Sans Mono" point-size="10">make_gridpack.sh DYjets 1 4; make_standalone.py ... --rw-module rw_module_DYjets.tar.gz</font><br/>then standalone_reweight.StandaloneReweight  <i>(proc_card must contain the sample's jets)</i>>];
+
+  legend [shape=note, style=filled, fillcolor=white, fontsize=11, label=<<b>Changed ... -&gt; start at</b><br align="left"/>model / LO-NLO ............ 1<br align="left"/>process, jets, NP order ...... 2<br align="left"/>EFT operators / values ...... 3<br align="left"/>energy, PDF, cuts, shower ... 4<br align="left"/>observables, binning ........ 5<br align="left"/>#events, seeds, jobs ........ 6<br align="left"/>histogram, rebinning ........ 7<br align="left"/>axis titles, legends ........ 8<br align="left"/><br align="left"/><b>NLO:</b> setup_process_NLO.sh, make_gridpack_NLO.sh,<br align="left"/>--nlo in run_gridpack.py + get_scaling.py<br align="left"/>>];
+
+  s0 -> s1 [style=dashed, label="  only if model changes"];
+  s0 -> s2 [style=dashed, label="  start at the\n  step you changed"];
+  s1 -> s2 [label="  update 'import model'"];
+  s2 -> s3 [label="  param_card rebuilt\n  from new process"];
+  s3 -> s4;
+  s4 -> s6;
+  s5 -> s6 [label="  no new gridpack;\n  --load-hepmc hepmc-dy\n  reruns Rivet only"];
+  s6 -> s7;
+  s7 -> chk;
+  s7 -> s8;
+  chk -> app [color="#2e7d32"];
+  chk -> s6 [style=dashed, color="#2e7d32", fontcolor="#2e7d32", label="  OK: production\n  with launch_jobs.py", constraint=false];
+  chk -> s3 [style=dashed, color="#c0392b", fontcolor="#c0392b", label="  problem in cards:\n  fix, new gridpack", constraint=false];
+  app -> legend [style=invis];
+  {rank=same; s4; s5;}
+}
