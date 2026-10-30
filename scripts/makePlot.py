@@ -77,7 +77,8 @@ if args.logy:
     h_axes[0].SetMinimum(args.y_min)
 
 # A dict to keep track of the hists
-legend = ROOT.TLegend(0.60, 0.88 - 0.05 * len(args.draw), 0.90, 0.91, '', 'NBNDC')
+legend = ROOT.TLegend(0.60, 0.88 - 0.06 * len(args.draw), 0.90, 0.91, '', 'NBNDC')
+legend.SetTextSize(0.035)
 
 legend.AddEntry(h_nominal, 'Nominal', 'L')
 
@@ -111,7 +112,7 @@ for tgt in args.draw:
     h.Draw('HISTSAME')
 
 
-plot.FixTopRange(pads[0], plot.GetPadYMax(pads[0]), 0.30)
+plot.FixTopRange(pads[0], plot.GetPadYMax(pads[0]), 0.26 + 0.06 * len(args.draw))
 print(h_axes[0].GetMinimum(), h_axes[0].GetMaximum())
 if hasattr(hists[0], 'x_edge_list'):
     x_edge_list = hists[0].x_edge_list
