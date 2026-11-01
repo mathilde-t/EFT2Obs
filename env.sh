@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+source /cvmfs/sft.cern.ch/lcg/views/LCG_106/x86_64-el9-gcc13-opt/setup.sh
 export EFTOBS_LOCAL_LHAPDF=1
 export LHAPDF_CONFIG_PATH="${PWD}/lhapdf/bin/lhapdf-config"
 export PYTHONPATH="${PWD}/$(echo lhapdf/lib*/python*/site-packages):${PYTHONPATH}"
