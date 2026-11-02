@@ -57,7 +57,8 @@ if args.bin_labels is not None:
 
 hname = args.hist
 
-aos = yoda.read(args.input, asdict=True)
+# Read only this histogram: much faster when the file holds many histograms
+aos = yoda.read(args.input, asdict=True, patterns=[hname.replace('[', '\\[') + r'\[rw\d+(_nlo)?\]'])
 
 n_pars = len(pars)
 n_hists = int(1 + n_pars * 2 + (n_pars * n_pars - n_pars) / 2)
