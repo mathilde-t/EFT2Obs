@@ -1,7 +1,7 @@
 // -*- C++ -*-
 //
-// DYplusJets: differential cross sections for pp -> Z/gamma*(-> ee, mumu) + jets,
-// inclusive and with a c- or b-tagged jet, for EFT2Obs SMEFT studies.
+// DYplusJets: differential cross sections for pp -> Z/gamma*(-> ee, mumu) + jets, inclusive
+// in the jets and vs the number of jets, for EFT2Obs SMEFT studies. No jet flavour tagging.
 //
 // EFT2Obs gives every event one weight per reweighting point, and Rivet fills each histogram
 // once per weight. get_scaling.py then turns those histograms into per-bin SMEFT scaling
@@ -10,17 +10,14 @@
 // Observables: y*, y_boost and the pT(ll) and rapidity binning are from the CMS Z+jet
 // triple-differential measurement, CMS-PAS-SMP-24-010, which does not use cos(theta*).
 // Object cuts: from the CMS Z+c/b routine in Rivet (CMS_2020_I1776758, SMP-19-004), because
-// SMP-24-010 has no flavour tagging and is mumu only. Its cuts differ: lepton pT > 29 GeV,
-// jet pT > 20 GeV and pT(ll) > 25 GeV.
+// SMP-24-010 is mumu only. Its cuts differ: lepton pT > 29 GeV, jet pT > 20 GeV and
+// pT(ll) > 25 GeV. The tagging itself is not used here.
 // All cuts are at particle level, with no detector effects.
 //
-// Histogram names: <region>_<channel>_<variable>, e.g. zb_ll_pTll
-//   region : zj = at least 1 jet
-//            zb = at least 1 b jet
-//            zc = at least 1 c jet and no b jet (exclusive with zb)
+// Histogram names: zj_<channel>_<variable>, e.g. zj_ll_pTll. zj = at least 1 jet.
 //   channel: ee, mm, ll (ll = ee + mm)
-//   The "jet" in Z-jet variables is the leading jet of the region: the leading b jet in zb,
-//   the leading c jet in zc and the leading jet in zj. An event in zb or zc is also in zj.
+//   The "jet" in Z-jet variables is the leading jet.
+// ll_nJets has every Z event, including those with no jet.
 //
 // Every histogram costs about (bins x 596 weights) in the output file, so the ee and mm
 // channels only get the variables listed in FIT_VARIABLES.
@@ -62,8 +59,7 @@ namespace Rivet {
       declare(zmm, "Zmm");
 
       // Anti-kT R = 0.4 jets from everything except the Z leptons and their photons.
-      // FastJets ignores neutrinos by default and ghost-associates b and c hadrons to the
-      // jets, which is what Jet::bTagged() and Jet::cTagged() use later.
+      // FastJets ignores neutrinos by default.
       VetoedFinalState jet_input(fs);
       jet_input.addVetoOnThisFinalState(zee);
       jet_input.addVetoOnThisFinalState(zmm);
@@ -94,21 +90,19 @@ namespace Rivet {
 
       // All variables for ee+mm; the variables for the fit also per channel, because many
       // operators act on one lepton flavour only (e.g. che11 vs che22).
-      for (const string& region : REGIONS) {
-        for (const auto& variable : edges) {
-          bookVariable(region + "_ll_" + variable.first, variable.second);
-        }
-        for (const string& channel : CHANNELS) {
-          for (const string& variable : FIT_VARIABLES) {
-            bookVariable(region + "_" + channel + "_" + variable, edges.at(variable));
-          }
+      for (const auto& variable : edges) {
+        bookVariable("zj_ll_" + variable.first, variable.second);
+      }
+      for (const string& channel : CHANNELS) {
+        for (const string& variable : FIT_VARIABLES) {
+          bookVariable("zj_" + channel + "_" + variable, edges.at(variable));
         }
       }
 
       // Number of jets for every Z event, including those with no jet (first bin)
       bookVariable("ll_nJets", linspace(6, -0.5, 5.5));
-      // One bin per selection: 0 = all Z events, 1 = zj, 2 = zb, 3 = zc
-      bookVariable("ll_yields", linspace(4, 0., 4.));
+      // One bin per selection: 0 = all Z events, 1 = zj
+      bookVariable("ll_yields", linspace(2, 0., 2.));
     }
 
 
@@ -132,21 +126,8 @@ namespace Rivet {
       _h["ll_yields"]->fill(0.5);
       if (jets.empty()) vetoEvent;
 
-      // Heavy-flavour tagging: a b or c hadron with pT > 5 GeV ghost-associated to the jet.
-      // A jet can carry both tags, and b goes first: an event with any b jet is only in zb.
-      const Cut tag_cut = Cuts::pT > TAG_HADRON_PT_MIN;
-      const Jets bjets = filter_select(jets, hasBTag(tag_cut));
-      const Jets cjets = filter_select(jets, hasCTag(tag_cut));
-
-      fillRegion("zj", channel, z, leptons, jets, jets.front());
+      fillVariables(channel, z, leptons, jets);
       _h["ll_yields"]->fill(1.5);
-      if (!bjets.empty()) {
-        fillRegion("zb", channel, z, leptons, jets, bjets.front());
-        _h["ll_yields"]->fill(2.5);
-      } else if (!cjets.empty()) {
-        fillRegion("zc", channel, z, leptons, jets, cjets.front());
-        _h["ll_yields"]->fill(3.5);
-      }
     }
 
 
@@ -154,8 +135,8 @@ namespace Rivet {
     ///
     /// The usual line, scale(_h, crossSection()/picobarn/sumW()), does not work in EFT2Obs. Each
     /// event carries two kinds of weight, and only the plain nominal one is a normal weight:
-    ///  - plain nominal (e.g. zb_ll_pTll): sigma per event, so it sums to N*sigma -> divide by N
-    ///  - rw weights (e.g. zb_ll_pTll[rw0000]): they already sum to sigma in pb -> keep as is.
+    ///  - plain nominal (e.g. zj_ll_pTll): sigma per event, so it sums to N*sigma -> divide by N
+    ///  - rw weights (e.g. zj_ll_pTll[rw0000]): they already sum to sigma in pb -> keep as is.
     ///    get_scaling.py reads these.
     /// Scaling by 1 still matters: it sets the ScaledBy annotation, which makes yodamerge average
     /// the jobs. Without it, yodamerge would add up their cross sections.
@@ -167,14 +148,14 @@ namespace Rivet {
 
   private:
 
-    /// Compute all variables for one event in one region, and fill them
-    void fillRegion(const string& region, const string& channel, const Particle& z,
-                    const Particles& leptons, const Jets& jets, const Jet& jet) {
+    /// Compute all variables for one event with at least one jet, and fill them
+    void fillVariables(const string& channel, const Particle& z,
+                       const Particles& leptons, const Jets& jets) {
 
       const FourMomentum Z = z.momentum();
       const FourMomentum lplus = leptons[0].momentum();
       const FourMomentum lminus = leptons[1].momentum();
-      const FourMomentum J = jet.momentum();
+      const FourMomentum J = jets.front().momentum();
 
       const map<string, double> values = {
         {"mll",        Z.mass()/GeV},
@@ -187,7 +168,7 @@ namespace Rivet {
         {"absyj",      J.absrap()},
         {"HT",         sum(jets, Kin::pT, 0.)/GeV},
         // SMP-24-010 eqs. (1) and (2). y* follows the partonic scattering angle and y_boost the
-        // imbalance of the parton momenta. The paper uses the leading jet; see the header for zb, zc.
+        // imbalance of the parton momenta. Leading jet, as in the paper.
         {"ystarZj",    0.5*deltaRap(Z, J)},
         {"yboostZj",   0.5*fabs(Z.rap() + J.rap())},
         {"dPhiZj",     deltaPhi(Z, J)},
@@ -195,16 +176,15 @@ namespace Rivet {
       };
 
       for (const auto& value : values) {
-        _h[region + "_ll_" + value.first]->fill(value.second);
+        _h["zj_ll_" + value.first]->fill(value.second);
       }
       for (const string& variable : FIT_VARIABLES) {
-        _h[region + "_" + channel + "_" + variable]->fill(values.at(variable));
+        _h["zj_" + channel + "_" + variable]->fill(values.at(variable));
       }
 
       // Zeppenfeld variable: only defined with at least 2 jets, so it is filled separately.
-      // It always uses the two leading jets, also in zb and zc.
       if (jets.size() >= 2) {
-        _h[region + "_ll_zeppenfeld"]->fill(fabs(Z.rap() - 0.5*(jets[0].rap() + jets[1].rap())));
+        _h["zj_ll_zeppenfeld"]->fill(fabs(Z.rap() - 0.5*(jets[0].rap() + jets[1].rap())));
       }
     }
 
@@ -244,12 +224,10 @@ namespace Rivet {
     static constexpr double MLL_MAX = 111*GeV;
     static constexpr double JET_R = 0.4;                 // Anti-kT radius
     static constexpr double JET_PT_MIN = 30*GeV;         // Jet pT
-    static constexpr double JET_ABSY_MAX = 2.4;          // Jet |y|: tracker, for b/c tagging
+    static constexpr double JET_ABSY_MAX = 2.4;          // Jet |y|: as in SMP-24-010
     static constexpr double JET_LEPTON_DR = 0.4;         // Remove jets this close to a lepton
-    static constexpr double TAG_HADRON_PT_MIN = 5*GeV;   // Hadron pT for a b or c tag
     /// @}
 
-    const vector<string> REGIONS = {"zj", "zb", "zc"};
     const vector<string> CHANNELS = {"ee", "mm"};
     const vector<string> FIT_VARIABLES = {"pTll", "absyll", "cosThetaCS", "ystarZj", "yboostZj"};
 
