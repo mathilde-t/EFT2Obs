@@ -97,9 +97,7 @@ namespace Rivet {
         {"ystarZj",       linspace(6, 0., 3.0)},
         {"yboostZj",      linspace(6, 0., 3.0)},
         {"ybPlusystar",   linspace(6, 0., 3)},
-        {"ybMinusystar",  linspace(6, 0., 3)},
         {"dPhiZj",        linspace(10, 0., PI)},
-        {"mZj",           {MLL_MIN/GeV, 100, 150, 200, 250, 300, 400, 500, 700, 1000, 1500, 3000}},
         {"zeppenfeld",    linspace(8, 0., 4.)},       // >= 2 jets, filled separately
       };
 
@@ -115,7 +113,7 @@ namespace Rivet {
       }
 
     // Number of jets for every Z event (0 jets -> first bin) 
-    bookVariable("ll_nJets", linspace(6, -0.5, 5.5));
+    bookVariable("ll_nJets", linspace(8, -0.5, 7.5));
 
     // One bin per selection: 0 = all Z events, 1 = zj
     bookVariable("ll_yields", linspace(2, 0., 2.));
@@ -141,7 +139,7 @@ namespace Rivet {
       Jets jets = apply<FastJets>(event, "Jets").jetsByPt(Cuts::abseta < JET_ABSETA_MAX && Cuts::pT > JET_PT_MIN);
       idiscardIfAnyDeltaRLess(jets, leptons, JET_LEPTON_DR);
 
-      _h["ll_nJets"]->fill(min(jets.size(), size_t(5)));  // 5 = overflow bin for ≥5 jets
+      _h["ll_nJets"]->fill(min(jets.size(), size_t(7)));  // 7 = overflow bin for ≥7 jets
       _h["ll_yields"]->fill(0.5);
       if (jets.empty()) vetoEvent;                        // <-- the ≥1-jet requirement
 
@@ -212,9 +210,7 @@ namespace Rivet {
         {"ystarZj",      0.5*deltaRap(Z, J)},
         {"yboostZj",     0.5*fabs(Z.rap() + J.rap())},
         {"ybPlusystar",  max(Z.absrap(), J.absrap())},                         // = y_b + y* = max(|yZ|,|yj|)
-        {"ybMinusystar", 0.5*fabs(Z.rap() + J.rap()) - 0.5*deltaRap(Z, J)},   // = y_b - y*
         {"dPhiZj",       deltaPhi(Z, J)},
-        {"mZj",          (Z + J).mass()/GeV},
         // zeppenfeld: needs >= 2 jets, filled separately below
       };
 
