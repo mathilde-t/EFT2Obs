@@ -37,8 +37,7 @@ ls MG5_aMC_v2_9_16/models/ | grep SMEFTsim       # UFO folders are there
   setup_mg5.sh first, and setup_process.sh (step 2) needs the model.
 - setup_mg5.sh always prints ERROR: environment variable LHAPDF_CONFIG_PATH is not set
   at the start. That line is misleading and can be ignored.
-- RivetPlugins/DYplusJets.plot and the scripts plot_DYplusJets.py and rank_operators.py are not in
-  git (status 2026-11-05): on a new clone, copy them over before steps 7 and 8.
+- scripts/rank_operators.py is not in git (status 2026-11-05): on a new clone, copy it over before step 7.
 - These scripts are not meant to be rerun: setup_mg5.sh stops if lhapdf/ or
   MG5_aMC_v2_9_16/ exists, and setup_model_SMEFTsim3.sh stops if the models exist.
   Changing the model, process or cards never needs a reinstall.
@@ -366,8 +365,8 @@ rivet-mkhtml run1/Rivet.yoda:"Title=13 TeV" run2/Rivet.yoda:"Title=13.6 TeV" -o 
   show only the nominal (SM), --errs to show error bars.
 - Output: <-o dir>/index.html, plus <-o dir>/DYplusJets/<hist>.png/.pdf. Count them: rivet-mkhtml
   returns 0 even when some plots fail.
-- Status 2026-11-05: DYplusJets.plot still has the variable names of the 2 Nov routine (absyll,
-  mZj, and .*_cosThetaCS, which does not match the _mll0…_mll3 slices).
+- .plot patterns match the start of a histogram name (Python re.match), and later blocks override
+  earlier ones: .*_mll also matches …_cosThetaCS_mll0, so the slice block resets LogX=0.
 
 b) EFT plots (scripts/plot_DYplusJets.py): SM vs chosen operator values
 -----------------------------------------------------------------------
@@ -381,8 +380,8 @@ python scripts/plot_DYplusJets.py -i $E -c cards/DYjets/config.json -o outputs/<
 - --ratio lo,hi: y-range of the ratio panel; --show-unc: stat. uncertainty band
   on the hypotheses; --variables, --channels to choose plots.
 - Legend labels: edit resources/translate_root_DY.json (e.g. "chj1": "c_{Hq}^{(1)}").
-- Status 2026-11-05: the VARIABLES list in the script still has the names of the 2 Nov routine
-  (absyll, mZj, and cosThetaCS without slices), so it does not cover all current histograms.
+- A new variable in the routine also needs an entry in the VARIABLES dict of the script (axis title, unit)
+  and a block in DYplusJets.plot.
 
 A single histogram with the generic EFT2Obs script:
 python scripts/makePlot.py --hist $E/scaling_zj_ll_mll.json -c cards/DYjets/config.json \
