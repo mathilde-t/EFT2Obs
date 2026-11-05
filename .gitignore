@@ -30,3 +30,10 @@ mgconfigscript
 cards/fitting-exercise
 rw_*/
 test-*/
+
+# Local files: installers downloaded by setup_mg5.sh, private notes, condor logs
+HEPToolsInstallers/
+notes/
+dy.*.err
+dy.*.out
+dy.*.log
