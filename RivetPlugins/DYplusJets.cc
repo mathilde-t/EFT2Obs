@@ -77,7 +77,7 @@ namespace Rivet {
         {"cosThetaCS",    linspace(20, -1, 1)},
         {"phiStar",       {0, 0.02, 0.05, 0.1, 0.2, 0.4, 0.7, 1.2, 2., 5.}},
 
-        // Leptons: 1 = l+, 2 = l- (ZFinder order); pTlep1 is the leading lepton pT
+        // Leptons, pT ordered (1 = leading, 2 = subleading)
         {"pTlep1",        {25, 35, 45, 55, 70, 90, 120, 160, 220, 400}},
         {"pTlep2",        {15, 25, 35, 45, 55, 70, 90, 120, 160, 220, 400}},
         {"etalep1",       linspace(30, -3, 3)},
@@ -177,6 +177,9 @@ namespace Rivet {
       const FourMomentum lminus = leptons[1].momentum();
       const FourMomentum J = jets.front().momentum();
 
+      const FourMomentum& lep1 = lplus.pt() > lminus.pT() ? lplus : lminus;
+      const FourMomentum& lep2 = lplus.pt() > lminus.pT() ? lminus : lplus;
+
 
       const map<string, double> values = {
         // Dilepton system (the Z)
@@ -188,13 +191,13 @@ namespace Rivet {
         {"cosThetaCS",   cosThetaCS(lminus, lplus)},                           // needs the charge: l-, l+
         {"phiStar",      phiStar(lminus, lplus)},
 
-        // Leptons: 1 = l+, 2 = l- (ZFinder order); pTlep1 is the leading lepton pT
-        {"pTlep1",       max(lminus.pT(), lplus.pT())/GeV},
-        {"pTlep2",       lminus.pT()/GeV},
-        {"etalep1",      lplus.eta()},
-        {"etalep2",      lminus.eta()},
-        {"philep1",      lplus.phi()},
-        {"philep2",      lminus.phi()},
+        // Leptons, pT ordered (1 = leading, 2 = subleading)
+        {"pTlep1",       lep1.pT()/GeV},
+        {"pTlep2",       lep2.pT()/GeV},
+        {"etalep1",      lep1.eta()},
+        {"etalep2",      lep2.eta()},
+        {"philep1",      lep1.phi()},
+        {"philep2",      lep2.phi()},
 
         // Leading jet, and all jets
         {"pTj",          J.pT()/GeV},
