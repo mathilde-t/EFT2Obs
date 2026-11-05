@@ -69,7 +69,8 @@ namespace Rivet {
        // Bin edges per variable. pTll, y*, y_b follow CMS-PAS-SMP-24-010; the rest follow the PocketCoffea analysis.
       const map<string, vector<double>> edges = {
         // Dilepton system -> Z
-        {"mll",           linspace(35, 25, 150)},
+        // mll: 5 GeV bins around the peak, wider bins in the tail, where the SMEFT/SM ratio grows
+        {"mll",           {25, 40, 50, 60, 70, 76, 81, 86, 91, 96, 101, 106, 120, 150, 200, 300, 400, 500, 700, 1000, 1500, 2000}},
         {"pTll",          {25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100, 110, 130, 150, 170, 190, 220, 250, 400, 1000}},
         {"yll",           linspace(5, 0., 3)},
         {"etall",         linspace(30, -3, 3)},
@@ -109,6 +110,14 @@ namespace Rivet {
       for (const string& channel : CHANNELS) {
         for (const string& variable : FIT_VARIABLES) {
           bookVariable("zj_" + channel + "_" + variable, edges.at(variable));
+        }
+      }
+      // cos theta*_CS in mll slices, for ll and per channel: zj_<channel>_cosThetaCS_mll0 ... _mll3
+      for (size_t i = 0; i < MLL_SLICES.size() - 1; ++i) {
+        const string name = "cosThetaCS_mll" + to_string(i);
+        bookVariable("zj_ll_" + name, edges.at("cosThetaCS"));
+        for (const string& channel : CHANNELS) {
+          bookVariable("zj_" + channel + "_" + name, edges.at("cosThetaCS"));
         }
       }
 
@@ -225,6 +234,16 @@ namespace Rivet {
       if (jets.size() >= 2) {
         _h["zj_ll_zeppenfeld"]->fill(fabs(Z.rap() - 0.5*(jets[0].rap() + jets[1].rap())));
       }
+
+      // costheta*_CS in the mll slice for this event
+      const double mll = Z.mass()/GeV;
+      for (size_t i = 0; i < MLL_SLICES.size() - 1; ++i) {
+        if (mll < MLL_SLICES[i] || mll >= MLL_SLICES[i+1]) continue;
+        const string name = "cosThetaCS_mll" + to_string(i);
+        _h["zj_ll_" + name]->fill(values.at("cosThetaCS"));
+        _h["zj_" + channel + "_" + name]->fill(values.at("cosThetaCS"));
+        break;  // only one slice per event
+      }
     }
 
     // cos(theta*) in the Collins-Soper frame: angle of the l- to the Z direction.
@@ -269,7 +288,8 @@ namespace Rivet {
     // @}
 
     const vector<string> CHANNELS = {"ee", "mm"};
-    const vector<string> FIT_VARIABLES = {"pTll", "cosThetaCS", "ystarZj", "yboostZj", "mll", "yll"};
+    const vector<string> FIT_VARIABLES = {"pTll", "ystarZj", "yboostZj", "mll", "yll"}; // cosThetaCS in slices below
+    const vector<double> MLL_SLICES = {25, 81, 101, 150, 2000}; // GeV
 
     // All histograms, by name
     map<string, Histo1DPtr> _h;
