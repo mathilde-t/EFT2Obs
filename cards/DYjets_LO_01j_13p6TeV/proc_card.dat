@@ -1,0 +1,6 @@
+import model SMEFTsim_top_MwScheme_UFO-massless
+
+generate p p > l+ l- NP<=1 @0
+add process p p > l+ l- j NP<=1 @1
+
+output DYjets_LO_01j_13p6TeV

@@ -1,0 +1,225 @@
+{
+    "blocks": [
+        "SMEFT"
+    ],
+    "inactive": {
+        "default_val": 0.0,
+        "parameters": []
+    },
+    "parameter_defaults": {
+        "block": "SMEFT",
+        "gen": 0.0,
+        "sm": 0.0,
+        "val": 0.01
+    },
+    "parameters": [
+        {
+            "index": 2,
+            "name": "cw"
+        },
+        {
+            "index": 4,
+            "name": "chbox"
+        },
+        {
+            "index": 5,
+            "name": "chdd"
+        },
+        {
+            "index": 6,
+            "name": "chg"
+        },
+        {
+            "index": 7,
+            "name": "chw"
+        },
+        {
+            "index": 8,
+            "name": "chb"
+        },
+        {
+            "index": 9,
+            "name": "chwb"
+        },
+        {
+            "index": 26,
+            "name": "chj1"
+        },
+        {
+            "index": 28,
+            "name": "chj3"
+        },
+        {
+            "index": 30,
+            "name": "chu"
+        },
+        {
+            "index": 32,
+            "name": "chd"
+        },
+        {
+            "index": 36,
+            "name": "cjj11"
+        },
+        {
+            "index": 37,
+            "name": "cjj18"
+        },
+        {
+            "index": 38,
+            "name": "cjj31"
+        },
+        {
+            "index": 39,
+            "name": "cjj38"
+        },
+        {
+            "index": 46,
+            "name": "cuu1"
+        },
+        {
+            "index": 47,
+            "name": "cuu8"
+        },
+        {
+            "index": 51,
+            "name": "cdd1"
+        },
+        {
+            "index": 52,
+            "name": "cdd8"
+        },
+        {
+            "index": 56,
+            "name": "cud1"
+        },
+        {
+            "index": 60,
+            "name": "cud8"
+        },
+        {
+            "index": 66,
+            "name": "cju1"
+        },
+        {
+            "index": 68,
+            "name": "cju8"
+        },
+        {
+            "index": 74,
+            "name": "cjd1"
+        },
+        {
+            "index": 75,
+            "name": "cjd8"
+        },
+        {
+            "index": 100,
+            "name": "cehre11"
+        },
+        {
+            "index": 101,
+            "name": "cehre22"
+        },
+        {
+            "index": 103,
+            "name": "cewre11"
+        },
+        {
+            "index": 104,
+            "name": "cewre22"
+        },
+        {
+            "index": 106,
+            "name": "cebre11"
+        },
+        {
+            "index": 107,
+            "name": "cebre22"
+        },
+        {
+            "index": 109,
+            "name": "chl111"
+        },
+        {
+            "index": 110,
+            "name": "chl122"
+        },
+        {
+            "index": 112,
+            "name": "chl311"
+        },
+        {
+            "index": 113,
+            "name": "chl322"
+        },
+        {
+            "index": 115,
+            "name": "che11"
+        },
+        {
+            "index": 116,
+            "name": "che22"
+        },
+        {
+            "index": 124,
+            "name": "cll1221"
+        },
+        {
+            "index": 127,
+            "name": "clj111"
+        },
+        {
+            "index": 128,
+            "name": "clj122"
+        },
+        {
+            "index": 130,
+            "name": "clj311"
+        },
+        {
+            "index": 131,
+            "name": "clj322"
+        },
+        {
+            "index": 145,
+            "name": "ceu11"
+        },
+        {
+            "index": 146,
+            "name": "ceu22"
+        },
+        {
+            "index": 151,
+            "name": "ced11"
+        },
+        {
+            "index": 152,
+            "name": "ced22"
+        },
+        {
+            "index": 157,
+            "name": "cje11"
+        },
+        {
+            "index": 158,
+            "name": "cje22"
+        },
+        {
+            "index": 163,
+            "name": "clu11"
+        },
+        {
+            "index": 164,
+            "name": "clu22"
+        },
+        {
+            "index": 169,
+            "name": "cld11"
+        },
+        {
+            "index": 170,
+            "name": "cld22"
+        }
+    ]
+}
