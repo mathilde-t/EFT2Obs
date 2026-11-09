@@ -72,7 +72,7 @@ namespace Rivet {
         // mll: 5 GeV bins around the peak, wider bins in the tail, where the SMEFT/SM ratio grows
         {"mll",           {25, 40, 50, 60, 70, 76, 81, 86, 91, 96, 101, 106, 120, 150, 200, 300, 400, 500, 700, 1000, 1500, 2000}},
         {"pTll",          {25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100, 110, 130, 150, 170, 190, 220, 250, 400, 1000}},
-        {"yll",           linspace(5, 0., 3)},
+        {"yll",           linspace(10, -3., 3)},
         {"etall",         linspace(30, -3, 3)},
         {"phill",         linspace(50, 0, 2*PI)},
         {"cosThetaCS",    linspace(20, -1, 1)},
@@ -88,8 +88,7 @@ namespace Rivet {
 
         // Leading jet, and all jets
         {"pTj",           {20, 30, 40, 50, 65, 85, 110, 150, 200, 300, 500, 1000}},
-        {"absyj",         linspace(8, 0., 2.4)},
-        {"yj",            linspace(6, 0., 3)},
+        {"yj",            linspace(12, -3., 3)},
         {"etaj",          linspace(30, -3, 3)},
         {"phij",          linspace(30, 0, 2*PI)},
         {"HT",            {20, 30, 50, 80, 120, 170, 250, 350, 500, 800, 1500}},
@@ -192,7 +191,7 @@ namespace Rivet {
         // Dilepton system (the Z)
         {"mll",          Z.mass()/GeV},
         {"pTll",         Z.pT()/GeV},
-        {"yll",          Z.absrap()},                                          // |y_Z|; main analysis yZ is signed
+        {"yll",          Z.rap()},
         {"etall",        Z.eta()},                                             // pseudorapidity, NOT rapidity
         {"phill",        Z.phi()},                                             // in [0, 2pi) in Rivet
         {"cosThetaCS",   cosThetaCS(lminus, lplus)},                           // needs the charge: l-, l+
@@ -208,8 +207,7 @@ namespace Rivet {
 
         // Leading jet, and all jets
         {"pTj",          J.pT()/GeV},
-        {"absyj",        J.absrap()},
-        {"yj",           J.absrap()},                                          // |y_j|, axis of main analysis yJet (signed there)
+        {"yj",           J.rap()},
         {"etaj",         J.eta()},
         {"phij",         J.phi()},
         {"HT",           sum(jets, Kin::pT, 0.)/GeV},
@@ -288,7 +286,7 @@ namespace Rivet {
     // @}
 
     const vector<string> CHANNELS = {"ee", "mm"};
-    const vector<string> FIT_VARIABLES = {"pTll", "ystarZj", "yboostZj", "mll", "yll"}; // cosThetaCS in slices below
+    const vector<string> FIT_VARIABLES = {"pTll", "ystarZj", "yboostZj", "mll", "yll", "cosThetaCS"}; // + mll-sliced cosThetaCS below
     const vector<double> MLL_SLICES = {25, 81, 101, 150, 2000}; // GeV
 
     // All histograms, by name

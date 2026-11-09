@@ -34,7 +34,7 @@ VARIABLES = {
     # dilepton system
     'mll': ('m_{ll}', 'GeV'),
     'pTll': ('p_{T}^{ll}', 'GeV'),
-    'yll': ('|y_{ll}|', ''),
+    'yll': ('y_{ll}', ''),
     'etall': ('#eta_{ll}', ''),
     'phill': ('#phi_{ll}', ''),
     'cosThetaCS': ('cos#theta^{*}_{CS}', ''),
@@ -52,8 +52,7 @@ VARIABLES = {
     'philep2': ('#phi_{l_{2}}', ''),
     # leading jet, and all jets
     'pTj': ('p_{T}^{j}', 'GeV'),
-    'absyj': ('|y_{j}|', ''),
-    'yj': ('|y_{j}|', ''),
+    'yj': ('y_{j}', ''),
     'etaj': ('#eta_{j}', ''),
     'phij': ('#phi_{j}', ''),
     'HT': ('H_{T}', 'GeV'),

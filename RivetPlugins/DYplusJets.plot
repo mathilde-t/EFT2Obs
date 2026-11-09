@@ -34,8 +34,8 @@ XLabel=$p_\mathrm{T}^{\ell\ell}$ [GeV]
 YLabel=$\mathrm{d}\sigma/\mathrm{d}p_\mathrm{T}^{\ell\ell}$ [pb/GeV]
 # END PLOT
 # BEGIN PLOT /DYplusJets/.*_yll
-XLabel=$|y_{\ell\ell}|$
-YLabel=$\mathrm{d}\sigma/\mathrm{d}|y_{\ell\ell}|$ [pb]
+XLabel=$y_{\ell\ell}$
+YLabel=$\mathrm{d}\sigma/\mathrm{d}y_{\ell\ell}$ [pb]
 # END PLOT
 # BEGIN PLOT /DYplusJets/.*_etall
 XLabel=$\eta_{\ell\ell}$
@@ -106,13 +106,9 @@ XLabel=Leading jet $p_\mathrm{T}$ [GeV]
 YLabel=$\mathrm{d}\sigma/\mathrm{d}p_\mathrm{T}^{j}$ [pb/GeV]
 LogX=1
 # END PLOT
-# BEGIN PLOT /DYplusJets/.*_absyj
-XLabel=Leading jet $|y|$
-YLabel=$\mathrm{d}\sigma/\mathrm{d}|y_{j}|$ [pb]
-# END PLOT
 # BEGIN PLOT /DYplusJets/.*_yj
-XLabel=$|y_{j}|$
-YLabel=$\mathrm{d}\sigma/\mathrm{d}|y_{j}|$ [pb]
+XLabel=$y_{j}$
+YLabel=$\mathrm{d}\sigma/\mathrm{d}y_{j}$ [pb]
 # END PLOT
 # BEGIN PLOT /DYplusJets/.*_etaj
 XLabel=Leading jet $\eta$
