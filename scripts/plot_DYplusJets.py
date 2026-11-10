@@ -15,7 +15,7 @@ Example, from the EFT2Obs folder:
 With --top-ranked <dir>, each histogram also gets its own leading operators, read from
 <dir>/ranking_rate/<histogram>.txt and <dir>/ranking_shape/<histogram>.txt (rank_operators.py):
 the N leading by rate as solid lines, then the N leading by shape that are not already drawn as
-dashed lines, each at the value the ranking used. run_DYjets_sample.sh plots this way:
+dashed lines, each at the value the ranking used. driver_run_DYjets_sample.sh plots this way:
   python scripts/plot_DYplusJets.py -i $E -c cards/<sample>/config.json -o outputs/<sample>/plots \\
       --channels ll ee mm --show-unc --top-ranked outputs/<sample>
 """

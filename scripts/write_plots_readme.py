@@ -10,7 +10,7 @@ plots show. Everything is read from the files of the sample, nothing has to be p
 
 Usage, from the EFT2Obs folder:
   python scripts/write_plots_readme.py <sample> [--eos-dir DIR] [--out-dir DIR]
-Called by step 5 of run_DYjets_sample.sh after the plots.
+Called by step 5 of driver_run_DYjets_sample.sh after the plots.
 """
 import argparse
 import datetime
@@ -105,7 +105,7 @@ def git_state():
     try:
         commit = subprocess.check_output(['git', 'log', '-1', '--format=%h (%cd)', '--date=short'],
                                          text=True).strip()
-        files = ['scripts/plot_DYplusJets.py', 'scripts/rank_operators.py', 'scripts/run_DYjets_sample.sh',
+        files = ['scripts/plot_DYplusJets.py', 'scripts/rank_operators.py', 'scripts/driver_run_DYjets_sample.sh',
                  'RivetPlugins/DYplusJets.cc', CARDS]
         dirty = subprocess.check_output(['git', 'status', '--porcelain', '--'] + files, text=True).split('\n')
         dirty = sorted(set(line[3:].strip() for line in dirty if line.strip()))
