@@ -139,6 +139,10 @@ def top_ranked_hypotheses(name):
 
 
 def smallest_positive_height(hists):
+    """Smallest bin content > 0 over all histograms (under- and overflow not included), or None if
+    every bin is empty or negative. Sets the lower end of the log-scale y axis: empty bins (0) cannot
+    be shown on a log scale, and negative weights can occur. make_plot skips histograms without SM
+    events, so there it is never None."""
     heights = [h.GetBinContent(i) for h in hists for i in range(1, h.GetNbinsX() + 1)]
     heights = [x for x in heights if x > 0]
     return min(heights) if heights else None
@@ -155,6 +159,12 @@ def make_ratio(h, h_sm, with_errors):
 
 
 def make_plot(filename, output, title, x_title, y_title, x_range, hypotheses, logy):
+    """One plot from the scaling file `filename` (scaling_<histogram>.json): upper panel the SM and
+    each hypothesis as differential cross section (per bin width), lower panel their ratio to the
+    SM. hypotheses: (values, colour, label, line style, group) from parse_hypothesis or
+    top_ranked_hypotheses. x_range: (min, max), either may be None for the axis edge; None = full
+    axis. Writes output.png and output.pdf. Returns False (nothing written) if the histogram has no
+    SM events, else True."""
     scaling = EFTScaling.fromJSON(filename)
     # --process-title: the generated process as title, the selection as text above SM
     selection = []
