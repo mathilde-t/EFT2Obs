@@ -1,13 +1,14 @@
 #!/usr/bin/env bash
 # Run get_scaling.py on every DYplusJets histogram of a merged yoda file.
 #
-# Usage: ./scripts/scaling_DYplusJets.sh <run folder> [config.json] [--nlo]
+# Usage: ./scripts/scaling_DYplusJets.sh <run folder> <config.json> [--nlo]
+# config.json: the one the gridpack was built with, cards/<sample>/config.json
 # Reads <run folder>/Rivet.yoda and writes <run folder>/scaling/scaling_<histogram>.{json,txt,log}
 # --nlo: the weights come from NLO reweighting (passed on to get_scaling.py)
 set -e
 
-run_dir="${1:?Usage: $0 <run folder> [config.json]}"
-config="${2:-cards/DYjets/config.json}"
+run_dir="${1:?Usage: $0 <run folder> <config.json> [--nlo]}"
+config="${2:?Usage: $0 <run folder> <config.json> [--nlo]}"
 nlo_flag="${3:-}"
 out_dir="${run_dir}/scaling"
 mkdir -p "${out_dir}"

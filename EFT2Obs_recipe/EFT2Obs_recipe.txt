@@ -1,9 +1,15 @@
 EFT2OBS RECIPE: WHAT TO EDIT AND WHAT TO RERUN
 ==============================================
 
-Example process: DYjets (cards in cards/DYjets/, Rivet routine DYplusJets).
-Status: 2026-11-05.
-Replace DYjets with your process name everywhere if you make a new one.
+Example: the DYjets samples with the Rivet routine DYplusJets. Each sample has its own cards folder
+cards/<sample>/, named DYjets_<order>_<jets>_<energy>, e.g. DYjets_LO_012j_13p6TeV. The sample name is
+also the MadGraph process name (output line of proc_card.dat), the gridpack name, and the EOS folder.
+In the commands below, replace <sample> by it. A new sample starts as a copy of an existing cards folder.
+Status: 2026-11-19.
+
+Driver: ./scripts/driver_run_DYjets_sample.sh <sample> <LO|NLO> [jobs] [events per job] runs steps 4–8
+for one sample: gridpack, test job, condor jobs, merging, scaling, rankings, plots, and a README. Its header
+lists its own steps; FROM_STEP=<n> resumes at one of them. The sections below describe each step by hand.
 
 Rule of thumb: every step depends on the ones above it. If you change
 something, rerun its step and everything below it.
@@ -37,24 +43,21 @@ ls MG5_aMC_v2_9_16/models/ | grep SMEFTsim       # UFO folders are there
   setup_mg5.sh first, and setup_process.sh (step 2) needs the model.
 - setup_mg5.sh always prints ERROR: environment variable LHAPDF_CONFIG_PATH is not set
   at the start. That line is misleading and can be ignored.
-- scripts/rank_operators.py is not in git (status 2026-11-05): on a new clone, copy it over before step 7.
 - These scripts are not meant to be rerun: setup_mg5.sh stops if lhapdf/ or
   MG5_aMC_v2_9_16/ exists, and setup_model_SMEFTsim3.sh stops if the models exist.
   Changing the model, process or cards never needs a reinstall.
 
-Using condor: the jobs only run source env.sh, so they need the LCG line in it, otherwise
-they fail with python: command not found:
-sed -i '1a source /cvmfs/sft.cern.ch/lcg/views/LCG_106/x86_64-el9-gcc13-opt/setup.sh' env.sh
-Keep this as a local edit and don't commit it (it would break CMSSW users). It can get lost
-(it did on 2026-10-29), so check with grep -n LCG_106 env.sh before submitting.
+Using condor: the jobs only run source env.sh, so env.sh sources the LCG_106 view in its first
+lines; without it they fail with python: command not found. This is also why env.sh must not be sourced
+in a CMSSW shell (step 0b).
 
 Only if the MadGraph install is really broken: this also deletes all models and process
 folders; your cards/ stay.
 rm -rf MG5_aMC_v2_9_16 lhapdf HEPToolsInstallers
 ./scripts/setup_mg5.sh
 ./scripts/setup_model_SMEFTsim3.sh
-./scripts/setup_process.sh DYjets
-./scripts/make_gridpack.sh DYjets 0 4
+./scripts/setup_process.sh <sample>
+./scripts/make_gridpack.sh <sample> 0 4
 Rivet (local/) is not affected and does not need reinstalling.
 
 0b. Every new terminal (always)
@@ -74,22 +77,22 @@ source env.sh
 Quick lookup: "I changed X → start at step N"
 =============================================
 
-+---------------------------------------------------+---------------------------------------------------------------------------+---------------+
-| What you want to change                           | File(s) to edit                                                           | Start at step |
-+---------------------------------------------------+---------------------------------------------------------------------------+---------------+
-| Fresh clone, nothing installed yet                | none                                                                      | 0a            |
-| Other SMEFTsim flavour/scheme (already installed) | import model line in cards/DYjets/proc_card.dat                           | 2             |
-| New model that is not installed yet (UFO)         | install into MG5_aMC_v2_9_16/models/ + proc_card.dat                      | 1             |
-| Process, final state, extra jets, NP<=1           | cards/DYjets/proc_card.dat                                                | 2             |
-| LO ↔ NLO ([QCD])                                  | proc_card.dat, model, NLO scripts (see NLO box)                           | 1/2           |
-| Which EFT operators / their values                | cards/DYjets/config.json (via auto_detect_operators.py or make_config.py) | 3             |
-| Generation params: energy, PDF, cuts, scales      | cards/DYjets/run_card.dat                                                 | 4             |
-| Shower settings (Pythia8, CMS tune)               | cards/DYjets/pythia8_card.dat                                             | 4             |
-| Rivet observables / cuts / binning                | RivetPlugins/DYplusJets.cc                                                | 5             |
-| Number of events / seeds / jobs                   | command line only                                                         | 6             |
-| Which histogram to parametrise / rebinning        | command line only                                                         | 7             |
-| Plot axis titles / legends                        | RivetPlugins/DYplusJets.plot, plot_DYplusJets.py                          | 8             |
-+---------------------------------------------------+---------------------------------------------------------------------------+---------------+
++---------------------------------------------------+-----------------------------------------------------------------------------+---------------+
+| What you want to change                           | File(s) to edit                                                             | Start at step |
++---------------------------------------------------+-----------------------------------------------------------------------------+---------------+
+| Fresh clone, nothing installed yet                | none                                                                        | 0a            |
+| Other SMEFTsim flavour/scheme (already installed) | import model line in cards/<sample>/proc_card.dat                           | 2             |
+| New model that is not installed yet (UFO)         | install into MG5_aMC_v2_9_16/models/ + proc_card.dat                        | 1             |
+| Process, final state, extra jets, NP<=1           | cards/<sample>/proc_card.dat                                                | 2             |
+| LO ↔ NLO ([QCD])                                  | proc_card.dat, model, NLO scripts (see NLO box)                             | 1/2           |
+| Which EFT operators / their values                | cards/<sample>/config.json (via auto_detect_operators.py or make_config.py) | 3             |
+| Generation params: energy, PDF, cuts, scales      | cards/<sample>/run_card.dat                                                 | 4             |
+| Shower settings (Pythia8, CMS tune)               | cards/<sample>/pythia8_card.dat                                             | 4             |
+| Rivet observables / cuts / binning                | RivetPlugins/DYplusJets.cc                                                  | 5             |
+| Number of events / seeds / jobs                   | command line only                                                           | 6             |
+| Which histogram to parametrise / rebinning        | command line only                                                           | 7             |
+| Plot axis titles / legends                        | RivetPlugins/DYplusJets.plot, scripts/dyplusjets_labels.py                  | 8             |
++---------------------------------------------------+-----------------------------------------------------------------------------+---------------+
 
 
 
@@ -115,8 +118,8 @@ Then update the import model ... line in proc_card.dat → continue with step 2.
 
 
 
-2. Process (cards/DYjets/proc_card.dat)
-=======================================
+2. Process (cards/<sample>/proc_card.dat)
+=========================================
 
 Edit, e.g.:
 import model SMEFTsim_topU3l_MwScheme_UFO-massless
@@ -124,21 +127,21 @@ import model SMEFTsim_topU3l_MwScheme_UFO-massless
 generate p p > l+ l- NP<=1 @0
 add process p p > l+ l- j NP<=1 @1
 
-output DYjets
+output <sample>
 - output <name> must equal the cards/<name> folder name.
 - Keep NP<=1 (at most one EFT vertex per diagram) → linear + quadratic terms.
-- Current cards/DYjets/proc_card.dat: only generate p p > l+ l- NP<=1 @0 (the + j line is
-  commented out), so all jets come from the shower.
+- The samples: 0j has only generate p p > l+ l- NP<=1 @0, so all jets come from the shower; 01j
+  adds p p > l+ l- j NP<=1 @1; 012j also p p > l+ l- j j NP<=1 NPcG=0 @2.
 - With + j (and + j j) processes, the jets need MLM merging: ickkw = 1 and xqcut in run_card.dat
-  (step 4). cards/ggF-HEL is a working example.
+  (step 4), as in the 01j and 012j cards.
 
 Rerun (the script refuses if the MG process folder already exists):
-rm -rf MG5_aMC_v2_9_16/DYjets
-./scripts/setup_process.sh DYjets
-- run_card.dat / pythia8_card.dat in cards/DYjets/ are not overwritten if they exist.
+rm -rf MG5_aMC_v2_9_16/<sample>
+./scripts/setup_process.sh <sample>
+- run_card.dat / pythia8_card.dat in cards/<sample>/ are not overwritten if they exist.
   If the process changed a lot (e.g. added jets → need matching/merging settings),
   delete them first to get fresh MG defaults, then re-apply your edits:
-  rm cards/DYjets/{run,pythia8}_card.dat before setup_process.sh.
+  rm cards/<sample>/{run,pythia8}_card.dat before setup_process.sh.
   A fresh run_card.dat has use_syst = True again: set it back to False (see step 4).
 
 → continue with step 3 (the param_card must be rebuilt from the new process).
@@ -158,16 +161,16 @@ and for SMEFTsim v3 also the NP... coupling orders of the Feynman diagrams and t
 propagator corrections (operators that change the Z/W/H/top widths via dWZ, ...).
 
 # only print the list, don't write anything
-python scripts/auto_detect_operators.py -p DYjets --noConfigJson
+python scripts/auto_detect_operators.py -p <sample> --noConfigJson
 
-# write cards/DYjets/config.json + cards/DYjets/reweight_card.dat
-python scripts/auto_detect_operators.py -p DYjets \
+# write cards/<sample>/config.json + cards/<sample>/reweight_card.dat
+python scripts/auto_detect_operators.py -p <sample> \
     --def-val 0.01 --def-sm 0.0 --def-gen 0.0
 
 # then the param_card (auto_detect does NOT make it)
-python scripts/make_param_card.py -p DYjets -c cards/DYjets/config.json \
-    -o cards/DYjets/param_card.dat
-- Run it from the EFT2Obs folder, after setup_process.sh (it needs MG5_aMC_v2_9_16/DYjets).
+python scripts/make_param_card.py -p <sample> -c cards/<sample>/config.json \
+    -o cards/<sample>/param_card.dat
+- Run it from the EFT2Obs folder, after setup_process.sh (it needs MG5_aMC_v2_9_16/<sample>).
 - It overwrites config.json and reweight_card.dat; it also prints the
   make_config.py ... --pars SMEFT:... command it used, so you can copy that into 3b.
 - The import model ... line must be the first line of proc_card.dat.
@@ -178,16 +181,16 @@ python scripts/make_param_card.py -p DYjets -c cards/DYjets/config.json \
 3b. By hand
 -----------
 
-Look up block names / indices in MG5_aMC_v2_9_16/DYjets/Cards/param_card.dat.
+Look up block names / indices in MG5_aMC_v2_9_16/<sample>/Cards/param_card.dat.
 
-python scripts/make_config.py -p DYjets -o cards/DYjets/config.json \
+python scripts/make_config.py -p <sample> -o cards/<sample>/config.json \
     --pars SMEFT:5,9,26,28,30,32,103,104,105,107,108,109,113,115,117,119,121 \
     --def-val 0.01 --def-sm 0.0 --def-gen 0.0
 
-python scripts/make_param_card.py -p DYjets -c cards/DYjets/config.json \
-    -o cards/DYjets/param_card.dat
+python scripts/make_param_card.py -p <sample> -c cards/<sample>/config.json \
+    -o cards/<sample>/param_card.dat
 
-python scripts/make_reweight_card.py cards/DYjets/config.json cards/DYjets/reweight_card.dat
+python scripts/make_reweight_card.py cards/<sample>/config.json cards/<sample>/reweight_card.dat
 - --def-val: value used in the reweighting points; --def-gen: value used for generation (0 = SM).
 - Per-parameter overrides: edit config.json, e.g. {"index": 5, "name": "chdd", "val": 0.1},
   then rerun only make_param_card.py and make_reweight_card.py.
@@ -202,13 +205,12 @@ python scripts/make_reweight_card.py cards/DYjets/config.json cards/DYjets/rewei
 =======================================
 
 Edit as needed:
-- cards/DYjets/run_card.dat – ebeam1/2, pdlabel/lhaid, cuts (ptl, mmll, etal, ...),
+- cards/<sample>/run_card.dat – ebeam1/2, pdlabel/lhaid, cuts (ptl, mmll, etal, ...),
   scales, nevents (only for the gridpack pilot run).
   - m_ℓℓ range: mmll/mmllmax should match the routine's mass window, 25–2000 GeV
-    (MLL_MIN/MLL_MAX in DYplusJets.cc). The current card and gridpack still have 50 and 150 GeV:
-    set 25.0 = mmll and 2000.0 = mmllmax for the next gridpack. Few events land in the tail of one flat
-    sample, so generating in m_ℓℓ slices may be needed.
-- cards/DYjets/pythia8_card.dat – shower settings
+    (MLL_MIN/MLL_MAX in DYplusJets.cc); all current cards use 25.0 = mmll and 2000.0 = mmllmax.
+    Few events land in the tail of one flat sample, so generating in m_ℓℓ slices may be needed.
+- cards/<sample>/pythia8_card.dat – shower settings
   (CMS-like tune: append resources/pythia8/cms_default_2018.dat).
 
 Required in run_card.dat: False = use_syst. MadGraph's default is True, which adds
@@ -216,15 +218,15 @@ PDF/scale weights to every event. EFT2Obs's weight corrector (setup/WeightCorrec
 the number of operators from the total number of weights, so the extra weights break it:
 with 33 operators (596 weights + 144 systematics) it gets 37, and Pythia crashes on the first event.
 With fewer operators it may not crash, but it can still mix these weights into the EFT terms.
-grep -n use_syst cards/DYjets/run_card.dat      # must show False
+grep -n use_syst cards/<sample>/run_card.dat    # must show False
 
-Build the gridpack (copies all cards from cards/DYjets/ into MG each time):
-./scripts/make_gridpack.sh DYjets 0 4
-#                          ^      ^ ^-- number of cores
-#                          |      +---- 1 = also export standalone rw_module_DYjets.tar.gz
-#                          +----------- cards folder
-Output: gridpack_DYjets.tar.gz (overwritten). A 4th argument adds a postfix,
-e.g. ./scripts/make_gridpack.sh DYjets 0 4 _13p6TeV → gridpack_DYjets_13p6TeV.tar.gz;
+Build the gridpack (copies all cards from cards/<sample>/ into MG each time):
+./scripts/make_gridpack.sh <sample> 0 4
+#                          ^        ^ ^-- number of cores
+#                          |        +---- 1 = also export standalone rw_module_<sample>.tar.gz
+#                          +------------- cards folder
+Output: gridpack_<sample>.tar.gz (overwritten). A 4th argument adds a postfix,
+e.g. ./scripts/make_gridpack.sh <sample> 0 4 _test → gridpack_<sample>_test.tar.gz;
 further arguments are passed to MG, e.g. "set ebeam1 6800" "set ebeam2 6800".
 
   ! Any change in steps 1–4 needs a new gridpack. The model, process,
@@ -268,21 +270,21 @@ rerun only Rivet on them (step 6, --load-hepmc), without regenerating events.
 ==============================
 
 Each job's yoda file is ~260 MB (every histogram once per weight), so write to EOS, not AFS:
-E=/eos/user/m/mwitt/EFT2Obs/<run name>        # a new folder for each run
+E=/eos/user/m/mwitt/EFT2Obs/<sample>          # one folder per sample, as the driver does
 
 Quick test (one job):
-python scripts/run_gridpack.py --gridpack gridpack_DYjets.tar.gz -s 1 -e 500 \
+python scripts/run_gridpack.py --gridpack gridpack_<sample>.tar.gz -s 1 -e 500 \
     -p DYplusJets -o $E --save-hepmc $E/hepmc
 
 Rivet-only rerun after editing the routine (reuses $E/hepmc/events_1.hepmc.gz):
-python scripts/run_gridpack.py --gridpack gridpack_DYjets.tar.gz -s 1 \
+python scripts/run_gridpack.py --gridpack gridpack_<sample>.tar.gz -s 1 \
     -p DYplusJets -o $E --load-hepmc $E/hepmc
 
 Many jobs (local, 4 in parallel):
-python scripts/launch_jobs.py --gridpack gridpack_DYjets.tar.gz -j 4 -s 1 -e 500 \
+python scripts/launch_jobs.py --gridpack gridpack_<sample>.tar.gz -j 4 -s 1 -e 500 \
     -p DYplusJets -o $E --job-mode interactive --parallel 4
 On condor: replace the last two options by
---job-mode condor --task-name dyplusjets --sub-opts '+JobFlavour = "workday"'.
+--job-mode condor --task-name <sample> --sub-opts '+JobFlavour = "workday"'.
 This needs the LCG line in env.sh (step 0a). -e is events per job.
 
 - Use a new -o folder for each gridpack/model. yodamerge on Rivet_*.yoda would
@@ -290,14 +292,14 @@ This needs the LCG line in env.sh (step 0a). -e is events per job.
 - Condor "DONE" does not mean it worked. The job script's exit code only reflects the last job,
   so failed jobs can still show as done. Check before merging:
   ls $E/Rivet_*.yoda | wc -l                       # must equal the number of jobs
-  grep -il traceback dyplusjets.<ClusterId>.*.err  # must print nothing
+  grep -il traceback <task name>.<ClusterId>.*.err # must print nothing
 - Long runs: use condor. Reweighting makes one pass over all events per reweight point (595 points
   took ~10 s each with 10k events, ~1 s each with 500), and a plain shell job dies when you log out.
   2000 events took 26 min.
 
 Clean up after a failed condor run:
 condor_rm <ClusterId>
-rm -f core.* dyplusjets.<ClusterId>.*
+rm -f core.* <task name>.<ClusterId>.*
 rm -rf $E                         # only if it holds nothing from an earlier good run
 
 Useful flags: --to-step lhe|shower|rivet, --save-lhe DIR, --load-lhe DIR, --no-cleanup.
@@ -312,11 +314,11 @@ HIGGSPRODMODE is only needed for the Higgs STXS routines, not for DYplusJets.
 # merge, only with more than one job (one job: cp $E/Rivet_1.yoda $E/Rivet.yoda)
 yodamerge -o $E/Rivet.yoda $E/Rivet_*.yoda
 
-# all DYplusJets histograms at once; writes $E/scaling/scaling_<hist>.json/.txt/.log
-./scripts/scaling_DYplusJets.sh $E
+# all DYplusJets histograms at once; writes $E/scaling/scaling_<hist>.json/.txt/.log (NLO: add --nlo)
+./scripts/scaling_DYplusJets.sh $E cards/<sample>/config.json
 
 # or one histogram
-python scripts/get_scaling.py -c cards/DYjets/config.json -i $E/Rivet.yoda \
+python scripts/get_scaling.py -c cards/<sample>/config.json -i $E/Rivet.yoda \
     --hist /DYplusJets/zj_ee_cosThetaCS_mll2 --save json,txt -o $E/scaling/scaling_zj_ee_cosThetaCS_mll2
 
 # which operators matter for one histogram, at c = 0.3
@@ -359,7 +361,7 @@ Editing the .plot file needs no recompilation, just rerun rivet-mkhtml.
 
 Legend entries are set per input file with file.yoda:Title=...; you can also
 compare several files:
-rivet-mkhtml "$E/Rivet.yoda:Title=SM (2000 events)" --no-weights -o outputs/<run name>/rivet_plots
+rivet-mkhtml "$E/Rivet.yoda:Title=SM (2000 events)" --no-weights -o outputs/<sample>/rivet_plots
 rivet-mkhtml run1/Rivet.yoda:"Title=13 TeV" run2/Rivet.yoda:"Title=13.6 TeV" -o compare-plots
 - By default every EFT weight is drawn as a faint line; add --no-weights to
   show only the nominal (SM), --errs to show error bars.
@@ -373,18 +375,22 @@ b) EFT plots (scripts/plot_DYplusJets.py): SM vs chosen operator values
 
 Uses the scaling .json files from step 7 (needs ROOT, which LCG provides). One plot per variable and
 channel, linear and log, PNG + PDF, in the style of makePlot.py:
-python scripts/plot_DYplusJets.py -i $E -c cards/DYjets/config.json -o outputs/<run name>/plots \
+python scripts/plot_DYplusJets.py -i $E -c cards/<sample>/config.json -o outputs/<sample>/plots \
     --draw chj3=0.3:4 chwb=0.3:2 che11=0.3:6 "chj3=0.3,chwb=0.3:8" --channels ll ee mm --ratio 0.8,1.2
 - --draw PAR1=X1,PAR2=X2:COLOR: one line + legend entry per argument (ROOT colour number: 2 red, 4 blue,
   6 magenta, 8 green, ...).
 - --ratio lo,hi: y-range of the ratio panel; --show-unc: stat. uncertainty band
   on the hypotheses; --variables, --channels to choose plots.
 - Legend labels: edit resources/translate_root_DY.json (e.g. "chj1": "c_{Hq}^{(1)}").
-- A new variable in the routine also needs an entry in the VARIABLES dict of the script (axis title, unit)
-  and a block in DYplusJets.plot.
+- --top-ranked outputs/<sample>: also draw the 3 leading operators by rate and by shape of each histogram,
+  from the rankings of the driver; --process-title sets the left title. The driver plots this way.
+- A new variable in the routine also needs an entry in VARIABLES in scripts/dyplusjets_labels.py (axis title,
+  unit) and a block in DYplusJets.plot.
+- SM of several samples, ratio to the first: scripts/plot_DYplusJets_SMsampleRatios.py -o <dir>
+  --sample "LO 0j=$E0" --sample "LO 01j=$E1" ... (--normalise compares shapes only).
 
 A single histogram with the generic EFT2Obs script:
-python scripts/makePlot.py --hist $E/scaling_zj_ll_mll.json -c cards/DYjets/config.json \
+python scripts/makePlot.py --hist $E/scaling/scaling_zj_ll_mll.json -c cards/<sample>/config.json \
     --x-title "m_{ll} [GeV]" --title-left "pp #rightarrow l^{+}l^{-} + #geq1 jet" --title-right "SMEFTsim3" \
     --draw chj3=0.3:4 chwb=0.3:2 --translate resources/translate_root_DY.json --ratio 0.8,1.2 --logy --y-min 1E-6
 Output: <json name>.png and .pdf next to the .json. The y-axis title ("a.u.") and the legend position
@@ -397,7 +403,7 @@ c) Which plot is which, and how to read them
 | Plots       | Files                                                              | Made by            |
 +-------------+--------------------------------------------------------------------+--------------------+
 | Rivet plots | <-o dir>/DYplusJets/<hist>.png/.pdf (overview <-o dir>/index.html) | rivet-mkhtml       |
-| EFT plots   | outputs/<run name>/plots/*.png/.pdf                                | plot_DYplusJets.py |
+| EFT plots   | outputs/<sample>/plots/*.png/.pdf                                  | plot_DYplusJets.py |
 +-------------+--------------------------------------------------------------------+--------------------+
 
 Rivet plots (DYplusJets/):
@@ -426,19 +432,19 @@ EFT plots: use these to compare hypotheses.
 Where is the output?
 ====================
 
-+-----------------------------------+-------------------------------------------------------------------+
-| What                              | Where                                                             |
-+-----------------------------------+-------------------------------------------------------------------+
-| Rivet histograms per job (seed X) | $E/Rivet_X.yoda on EOS, e.g. $E/Rivet_1.yoda                      |
-| Merged histograms                 | $E/Rivet.yoda (from yodamerge)                                    |
-| Scaling functions                 | $E/scaling/scaling_<hist>.json / .txt (scaling_DYplusJets.sh)     |
-| Per-bin coefficient tables        | $E/scaling/scaling_<hist>.log                                     |
-| Rivet plots                       | <-o dir>/index.html (from rivet-mkhtml)                           |
-| EFT plots                         | outputs/<run name>/plots/ (from plot_DYplusJets.py)               |
-| Standalone reweighting module     | rw_module_DYjets.tar.gz (only with make_gridpack.sh DYjets 1 ...) |
-| LHE / HepMC files                 | only if --save-lhe DIR / --save-hepmc DIR was given               |
-| Job working dir                   | /tmp/$USER/gridpack_run_X, deleted at the end unless --no-cleanup |
-+-----------------------------------+-------------------------------------------------------------------+
++-----------------------------------+-----------------------------------------------------------------------+
+| What                              | Where                                                                 |
++-----------------------------------+-----------------------------------------------------------------------+
+| Rivet histograms per job (seed X) | $E/Rivet_X.yoda on EOS, e.g. $E/Rivet_1.yoda                          |
+| Merged histograms                 | $E/Rivet.yoda (from yodamerge)                                        |
+| Scaling functions                 | $E/scaling/scaling_<hist>.json / .txt (scaling_DYplusJets.sh)         |
+| Per-bin coefficient tables        | $E/scaling/scaling_<hist>.log                                         |
+| Rivet plots                       | <-o dir>/index.html (from rivet-mkhtml)                               |
+| EFT plots                         | outputs/<sample>/plots/ (from plot_DYplusJets.py)                     |
+| Standalone reweighting module     | rw_module_<sample>.tar.gz (only with make_gridpack.sh <sample> 1 ...) |
+| LHE / HepMC files                 | only if --save-lhe DIR / --save-hepmc DIR was given                   |
+| Job working dir                   | /tmp/$USER/gridpack_run_X, deleted at the end unless --no-cleanup     |
++-----------------------------------+-----------------------------------------------------------------------+
 
 
 
@@ -496,23 +502,21 @@ Option B: per event, standalone reweighting of an existing sample
 -----------------------------------------------------------------
 
 # 1. Build the gridpack with the standalone module export switched on (2nd argument = 1)
-./scripts/make_gridpack.sh DYjets 1 4          # -> rw_module_DYjets.tar.gz
+./scripts/make_gridpack.sh <sample> 1 4          # -> rw_module_<sample>.tar.gz
 # 2. Pack module + config + one param_card per reweighting point
-python scripts/make_standalone.py -p DYjets -o rw_DYjets -c cards/DYjets/config.json \
-    --rw-module rw_module_DYjets.tar.gz
+python scripts/make_standalone.py -p <sample> -o rw_<sample> -c cards/<sample>/config.json \
+    --rw-module rw_module_<sample>.tar.gz
 Then per event in Python (needs LHE-level partons: 4-momenta, PDG IDs, helicities, status, alpha_s):
 import sys; sys.path.insert(0, 'scripts')
 from standalone_reweight import StandaloneReweight
-rw = StandaloneReweight('rw_DYjets')
+rw = StandaloneReweight('rw_<sample>')
 w  = rw.ComputeWeights(parts, pdgs, helicities, status, alphas, True)  # parts = [[E,px,py,pz], ...]
 tw = rw.TransformWeights(w)
 new_w = rw.CalculateWeight(tw, chdd=0.1, chwb=0.05)   # weight for any operator values
-- Which module? Always one built from the current proc_card / config.json.
-  (The old rw_module_DYjets.tar.gz from 2026-10-25 contains + j subprocesses and
-  does not match the current 0-jet setup; don't use it.)
+- Which module? Always one built from the same proc_card / config.json as the events to reweight.
 - Which sample? Only events whose parton configuration exists in your MG process can
-  be reweighted. Current proc_card = p p > l+ l- only. Official DY samples usually have
-  0–4 extra jets → ComputeWeights prints an error for those events. To reweight such a
+  be reweighted: 0j has p p > l+ l- only, 012j up to two extra partons. Official DY samples usually
+  have 0–4 extra jets → ComputeWeights prints an error for events with more partons than the process. To reweight such a
   sample, add the + j processes in proc_card.dat (step 2) and use the same model /
   flavour scheme as the sample.
 - Standalone reweighting does not work with NLO matrix elements.
@@ -532,7 +536,7 @@ NLO box (LO → NLO in QCD)
 | 3    | make_reweight_card.py | add --prepend 'change mode NLO'                                                                                       |
 | 4    | pythia8_card.dat      | shower_card.dat; in run_card: parton_shower = PYTHIA8, req_acc = 0.001, store_rwgt_info = True, reweight_scale = True |
 | 4    | make_gridpack.sh      | make_gridpack_NLO.sh                                                                                                  |
-| 6/7  | –                     | add --nlo to run_gridpack.py and get_scaling.py                                                                       |
+| 6/7  | –                     | add --nlo to run_gridpack.py, get_scaling.py, scaling_DYplusJets.sh (the driver does this for NLO)                    |
 +------+-----------------------+-----------------------------------------------------------------------------------------------------------------------+
 
 

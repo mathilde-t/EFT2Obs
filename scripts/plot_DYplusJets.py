@@ -9,7 +9,7 @@ Input : <input-dir>/scaling/scaling_zj_<channel>_<variable>.json and scaling_ll_
 Output: <outdir>/zj_<channel>_<variable>_{lin,log}.{png,pdf} and <outdir>/ll_nJets_{lin,log}.{png,pdf}
 
 Example, from the EFT2Obs folder:
-  python scripts/plot_DYplusJets.py -i test-dyplusjets -c cards/DYjets/config.json \\
+  python scripts/plot_DYplusJets.py -i $E -c cards/<sample>/config.json \\
       --draw chj1=0.3:4 chu=0.3:2 "chj1=0.3,chu=0.3:8" --ratio 0.8,1.2
 
 With --top-ranked <dir>, each histogram also gets its own leading operators, read from
