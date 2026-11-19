@@ -31,6 +31,7 @@ import yoda
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import plotting as plot  # noqa: E402
 from dyplusjets_labels import VARIABLES, SLICE_LABELS, CHANNEL_LABELS, histograms, selection_lines  # noqa: E402
+from dyplusjets_ratio import defined_bins, draw_ratio_band, draw_ratio_line  # noqa: E402
 
 ROOT.PyConfig.IgnoreCommandLineOptions = True
 ROOT.gROOT.SetBatch(ROOT.kTRUE)
@@ -186,17 +187,15 @@ def make_plot(name, sm, output, title, x_title, y_title, x_range, logy):
     pads[1].cd()
     pads[1].SetGrid(0, 1)
     h_axes[1].Draw()
-    ratios = []
+    # Bins without events in the reference have no ratio: they are left empty (see dyplusjets_ratio.py)
+    bins = defined_bins(hists[0], x_range)
+    ratios = []  # ratio histograms, for ratio_range (it skips the empty bins, which are 0 there)
+    drawn = []  # ROOT only draws objects that stay alive
     for i, (h, band) in enumerate(zip(hists, bands)):
         r_band = plot.MakeRatioHist(band, hists[0], True, False)
         r_line = plot.MakeRatioHist(h, hists[0], False, False)
-        for r in (r_band, r_line):
-            for b in range(1, r.GetNbinsX() + 1):
-                if hists[0].GetBinContent(b) <= 0:  # no reference: no ratio
-                    r.SetBinContent(b, 0.)
-                    r.SetBinError(b, 0.)
-        r_band.Draw('E2SAME')
-        r_line.Draw('HISTSAME')
+        drawn.append(draw_ratio_band(r_band, bins, COLORS[i]))
+        drawn += draw_ratio_line(r_line, bins, COLORS[i], h.GetLineWidth())
         ratios += [r_band, r_line]
     if args.ratio:
         ratio_lo, ratio_hi = [float(x) for x in args.ratio.split(',')]

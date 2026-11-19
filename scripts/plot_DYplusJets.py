@@ -39,6 +39,7 @@ plot.ModTDRStyle()
 
 # Axis titles, slice labels, x ranges, and the list of histograms: shared with plot_DYplusJets_SMsampleRatios.py
 from dyplusjets_labels import VARIABLES, SLICE_LABELS, CHANNEL_LABELS, histograms, selection_lines  # noqa: E402
+from dyplusjets_ratio import defined_bins, draw_ratio_band, draw_ratio_line  # noqa: E402
 
 parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
 parser.add_argument('--input-dir', '-i', required=True,
@@ -146,16 +147,6 @@ def smallest_positive_height(hists):
     heights = [h.GetBinContent(i) for h in hists for i in range(1, h.GetNbinsX() + 1)]
     heights = [x for x in heights if x > 0]
     return min(heights) if heights else None
-
-
-def make_ratio(h, h_sm, with_errors):
-    """Ratio to the SM. Bins without SM events have no ratio: draw 1 instead of a drop to 0."""
-    ratio = plot.MakeRatioHist(h, h_sm, with_errors, False)
-    for i in range(1, ratio.GetNbinsX() + 1):
-        if h_sm.GetBinContent(i) <= 0:
-            ratio.SetBinContent(i, 1.)
-            ratio.SetBinError(i, 0.)
-    return ratio
 
 
 def make_plot(filename, output, title, x_title, y_title, x_range, hypotheses, logy):
@@ -313,13 +304,14 @@ def make_plot(filename, output, title, x_title, y_title, x_range, hypotheses, lo
     pads[1].cd()
     pads[1].SetGrid(0, 1)
     h_axes[1].Draw()
-    ratios = []
+    # Bins without SM events have no ratio: they are left empty (see dyplusjets_ratio.py)
+    bins = defined_bins(h_sm, x_range)
+    ratios = []  # ROOT only draws objects that stay alive
     for h_err in bands:
-        ratios.append(make_ratio(h_err, h_sm, True))
-        ratios[-1].Draw('E2SAME')
+        ratios.append(draw_ratio_band(plot.MakeRatioHist(h_err, h_sm, True, False), bins, h_err.GetLineColor()))
     for h in hists:
-        ratios.append(make_ratio(h, h_sm, False))
-        ratios[-1].Draw('HISTSAME')
+        ratios += draw_ratio_line(plot.MakeRatioHist(h, h_sm, False, False), bins, h.GetLineColor(),
+                                  h.GetLineWidth(), h.GetLineStyle())
     ratio_lo, ratio_hi = [float(x) for x in args.ratio.split(',')]
     plot.SetupTwoPadSplitAsRatio(pads, plot.GetAxisHist(pads[0]), plot.GetAxisHist(pads[1]),
                                  'Ratio to SM', True, ratio_lo, ratio_hi)
