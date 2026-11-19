@@ -37,3 +37,11 @@ notes/
 dy.*.err
 dy.*.out
 dy.*.log
+
+# Analysis outputs and local leftovers: hand-made condor files, logs, Kerberos cache
+outputs/
+condor_dy*.sh
+condor_dy*.sub
+dyplusjets.*.log
+gridpack_*.log
+mwitt.cc
