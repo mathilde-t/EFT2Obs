@@ -73,7 +73,7 @@ step "settings: cards/${CARDS}, ${ORDER}, ${JOBS} jobs x ${EVENTS} events, ${COR
 grep -E "= *(ebeam1|ebeam2|mmll|mmllmax|use_syst|ickkw|xqcut|parton_shower)\b" "cards/${CARDS}/run_card.dat"
 if [ "${ORDER}" = LO ]; then
     grep -qE "^\s*False\s*=\s*use_syst" "cards/${CARDS}/run_card.dat" \
-        || fail "run_card.dat needs 'False = use_syst' (recipe, step 4)"
+        || fail "run_card.dat needs 'False = use_syst': the systematics weights break setup/WeightCorrector.h"
 fi
 
 # ---- Steps 1-3: gridpack, local test, condor submission
