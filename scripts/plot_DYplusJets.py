@@ -39,8 +39,9 @@ ROOT.TH1.AddDirectory(False)
 plot.ModTDRStyle()
 
 # Axis titles, slice labels, x ranges, and the list of histograms: shared with plot_DYplusJets_SMsampleRatios.py
-from dyplusjets_labels import VARIABLES, SLICE_LABELS, CHANNEL_LABELS, histograms, selection_lines  # noqa: E402
-from dyplusjets_ratio import defined_bins, draw_ratio_band, draw_ratio_line  # noqa: E402
+from plot_DYplusJets__labels import VARIABLES, SLICE_LABELS, CHANNEL_LABELS, histograms, selection_lines  # noqa: E402
+from plot_DYplusJets__ratio import defined_bins, draw_ratio_band, draw_ratio_line  # noqa: E402
+from plot_DYplusJets__readme import update_readme_date  # noqa: E402
 
 parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
 parser.add_argument('--input-dir', '-i', required=True,
@@ -61,7 +62,7 @@ parser.add_argument('--translate', default='resources/translate_root_DY.json',
 parser.add_argument('--ratio', default='0.9,1.1', help='y range of the ratio panel')
 parser.add_argument('--title-right', default='SMEFTsim3, 13 TeV')
 parser.add_argument('--process-title', default=None,
-                    help='left title: the generated process, e.g. "pp #rightarrow l^{+}l^{-} + #leq 2j (LO)". '
+                    help=r'left title: the generated process, e.g. "\mathrm{pp} \rightarrow \ell^{+}\ell^{-} + \leq \mathrm{2j}\ (\mathrm{LO})" (ROOT math mode, see plot_DYplusJets__labels.py). '
                          'The selection of each histogram (jets, m_ll slice) then goes as "sel: ..." above SM '
                          '(with --top-ranked only)')
 parser.add_argument('--show-unc', action='store_true', help='draw the statistical uncertainty of the EFT terms')
@@ -313,7 +314,7 @@ def make_plot(filename, output, title, x_title, y_title, x_range, hypotheses, lo
     pads[1].cd()
     pads[1].SetGrid(0, 1)
     h_axes[1].Draw()
-    # Bins without SM events have no ratio: they are left empty (see dyplusjets_ratio.py)
+    # Bins without SM events have no ratio: they are left empty (see plot_DYplusJets__ratio.py)
     bins = defined_bins(h_sm, x_range)
     ratios = []  # ROOT only draws objects that stay alive
     for h_err in bands:
@@ -365,3 +366,6 @@ for name, output_name, title, x_title, y_title, x_range in plots:
 # The ee and mm channels only have the fit variables, so missing files are normal there
 if missing:
     print('No scaling file, skipped: ' + ' '.join(missing))
+
+# Date of the plots in the README of the folder, so it always matches the plots
+update_readme_date(output_dir)

@@ -20,6 +20,8 @@ import os
 import re
 import subprocess
 
+from plot_DYplusJets__readme import update_readme_date
+
 parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
 parser.add_argument('sample', help='sample name: cards/<sample>, <eos-dir>/<sample>, outputs/<sample>')
 parser.add_argument('--eos-dir', default='/eos/user/m/mwitt/EFT2Obs', help='parent of the run folder')
@@ -168,11 +170,11 @@ commit, dirty = git_state()
 
 # ---- README
 md = []
-md.append('# %s: plots\n' % SAMPLE)
+md.append('## %s: plots\n' % SAMPLE) # title one size smaller than #, sections in bold (web view)
 md.append('Drell-Yan + jets with SMEFT reweighting, %s, sqrt(s) = %g TeV, model `%s`.' % (order, sqrt_s, model))
 md.append('Written %s by `scripts/write_plots_readme.py`.\n' % datetime.datetime.now().strftime('%Y-%m-%d %H:%M'))
 
-md.append('## Generation\n')
+md.append('**Generation**\n')
 md.append('MadGraph5_aMC@NLO process (`cards/%s/proc_card.dat`):\n' % SAMPLE)
 md.append('```')
 md += processes
@@ -186,7 +188,7 @@ md.append('')
 md.append('Parton shower and hadronisation: Pythia 8 (`cards/%s/pythia8_card.dat`).' % SAMPLE)
 md.append('Rivet routine: `DYplusJets` (`RivetPlugins/DYplusJets.cc`).\n')
 
-md.append('## Events\n')
+md.append('**Events**\n')
 md.append('| Quantity | Value |')
 md.append('|---|---|')
 requested = requested_events()
@@ -215,14 +217,14 @@ md.append('| merged Rivet.yoda written | %s |' % merged_date)
 md.append('')
 md.append('Run folder: `%s` (yoda files, `scaling/`).\n' % RUN)
 
-md.append('## SMEFT operators\n')
+md.append('**SMEFT operators**\n')
 md.append('%d operators enter this process (`cards/%s/config.json`), with %d reweighting points '
           '(%d weights per event with the nominal one), reference value %s.' %
           (len(operators), SAMPLE, reweight_points, reweight_points + 1, reference_value))
 md.append('Coefficients in units of TeV^-2 (Lambda = 1 TeV).\n')
 md.append(' '.join('`%s`' % o for o in operators) + '\n')
 
-md.append('## Plots\n')
+md.append('**Plots**\n')
 md.append('Per histogram: the SM, the 3 leading operators by rate (solid) and the 3 leading by shape '
           '(dashed), each alone at c = %s, from `%s/ranking_rate/` and `%s/ranking_shape/`.' %
           (c_value, OUT, OUT))
@@ -234,7 +236,7 @@ md.append('File names: `<selection>_<channel>_<variable>[_<x range>]_<lin|log>.<
           'with channel `ll` (ee + mumu), `ee`, or `mm`; `lin`/`log` is the y axis.')
 md.append('%d plots of %d histograms, each as png and pdf.\n' % (len(pngs), len(histograms)))
 
-md.append('## Code\n')
+md.append('**Code**\n')
 md.append('EFT2Obs commit %s.' % commit)
 if dirty:
     md.append('Uncommitted changes at the time of writing in: ' + ', '.join('`%s`' % d for d in dirty) + '.')
@@ -242,4 +244,6 @@ md.append('')
 
 with open(os.path.join(PLOTS, 'README.md'), 'w') as f:
     f.write('\n'.join(md))
+# Date of the plots (newest plot file), next to the date this README was written
+update_readme_date(PLOTS)
 print('written %s' % os.path.join(PLOTS, 'README.md'))

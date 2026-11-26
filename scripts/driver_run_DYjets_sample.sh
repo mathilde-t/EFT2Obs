@@ -168,13 +168,14 @@ case "${SAMPLE}" in
     *) ENERGY="" ;;
 esac
 [ "${ORDER}" = LO ] && MODEL="SMEFTsim3" || MODEL="SMEFTatNLO"
-# Left title: the generated process, from the jets in the sample name: 0j -> "0j", 01j -> "<= 1j", 012j -> "<= 2j"
+# Left title: the generated process, from the jets in the sample name: 0j -> "0j", 01j -> "<= 1j", 012j -> "<= 2j".
+# In ROOT math mode (backslash, see plot_DYplusJets__labels.py): words upright in \mathrm{}, spaces as "\ "
 PARTONS=$(echo "${SAMPLE}" | cut -d_ -f3)   # e.g. 012j
 case "${PARTONS}" in
-    0j) JETS="0j" ;;
-    *) JETS="#leq ${PARTONS: -2}" ;;      # last digit + j
+    0j) JETS='\mathrm{0j}' ;;
+    *) JETS='\leq \mathrm{'"${PARTONS: -2}"'}' ;;      # last digit + j
 esac
-PROCESS="pp #rightarrow l^{+}l^{-} + ${JETS} (${ORDER})"
+PROCESS='\mathrm{pp} \rightarrow \ell^{+}\ell^{-} + '"${JETS}"'\ (\mathrm{'"${ORDER}"'})'
 # --top-ranked: each histogram gets the 3 leading operators of its own rate and shape rankings.
 # Ratio panel 0.8-1.2: at c = 1 the leading rate effects are about 14 %
 python scripts/plot_DYplusJets.py -i "${E}" -c "cards/${CARDS}/config.json" -o "${OUT}/plots" \
@@ -189,17 +190,17 @@ case "${SAMPLE}" in
     DYjets_LO_0j_13p6TeV|DYjets_LO_01j_13p6TeV|DYjets_LO_012j_13p6TeV)
         step "comparison of the LO 13.6 TeV samples"
         python scripts/plot_DYplusJets_SMsampleRatios.py -o outputs/compare_LO_13p6TeV --channels ll ee mm \
-            --ratio-title "Ratio to Born" --process-title "pp #rightarrow l^{+}l^{-} (LO)" \
-            --sample "LO 0j=${EOS_DIR}/DYjets_LO_0j_13p6TeV" \
-            --sample "LO #kern[-1]{#leq}1j=${EOS_DIR}/DYjets_LO_01j_13p6TeV" \
-            --sample "LO #kern[-1]{#leq}2j=${EOS_DIR}/DYjets_LO_012j_13p6TeV" \
+            --ratio-title "Ratio to Born" --process-title '\mathrm{pp} \rightarrow \ell^{+}\ell^{-}\ (\mathrm{LO})' \
+            --sample '\mathrm{LO\ 0j}'"=${EOS_DIR}/DYjets_LO_0j_13p6TeV" \
+            --sample '\mathrm{LO}\ \leq \mathrm{1j}'"=${EOS_DIR}/DYjets_LO_01j_13p6TeV" \
+            --sample '\mathrm{LO}\ \leq \mathrm{2j}'"=${EOS_DIR}/DYjets_LO_012j_13p6TeV" \
             || fail "comparison failed"
         step "normalised comparison of the LO 13.6 TeV samples"
         python scripts/plot_DYplusJets_SMsampleRatios.py -o outputs/compare_LO_13p6TeV_normalised --channels ll ee mm \
-            --normalise --ratio-title "Ratio to Born" --process-title "pp #rightarrow l^{+}l^{-} (LO)" \
-            --sample "LO 0j=${EOS_DIR}/DYjets_LO_0j_13p6TeV" \
-            --sample "LO #kern[-1]{#leq}1j=${EOS_DIR}/DYjets_LO_01j_13p6TeV" \
-            --sample "LO #kern[-1]{#leq}2j=${EOS_DIR}/DYjets_LO_012j_13p6TeV" \
+            --normalise --ratio-title "Ratio to Born" --process-title '\mathrm{pp} \rightarrow \ell^{+}\ell^{-}\ (\mathrm{LO})' \
+            --sample '\mathrm{LO\ 0j}'"=${EOS_DIR}/DYjets_LO_0j_13p6TeV" \
+            --sample '\mathrm{LO}\ \leq \mathrm{1j}'"=${EOS_DIR}/DYjets_LO_01j_13p6TeV" \
+            --sample '\mathrm{LO}\ \leq \mathrm{2j}'"=${EOS_DIR}/DYjets_LO_012j_13p6TeV" \
             || fail "normalised comparison failed"
         ;;
 esac

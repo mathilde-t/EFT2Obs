@@ -30,8 +30,9 @@ import yoda
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import plotting as plot  # noqa: E402
-from dyplusjets_labels import VARIABLES, SLICE_LABELS, CHANNEL_LABELS, histograms, selection_lines  # noqa: E402
-from dyplusjets_ratio import defined_bins, draw_ratio_band, draw_ratio_line  # noqa: E402
+from plot_DYplusJets__labels import VARIABLES, SLICE_LABELS, CHANNEL_LABELS, histograms, selection_lines  # noqa: E402
+from plot_DYplusJets__ratio import defined_bins, draw_ratio_band, draw_ratio_line  # noqa: E402
+from plot_DYplusJets__readme import update_readme_date  # noqa: E402
 
 ROOT.PyConfig.IgnoreCommandLineOptions = True
 ROOT.gROOT.SetBatch(ROOT.kTRUE)
@@ -53,7 +54,8 @@ parser.add_argument('--ratio', default=None,
                     help='y range of the ratio panel, e.g. 0.5,2; default: from the ratios in the drawn range')
 parser.add_argument('--title-right', default='13.6 TeV')
 parser.add_argument('--process-title', default=None,
-                    help='left title, e.g. "pp #rightarrow l^{+}l^{-} (LO)"; the selection of each histogram '
+                    help=r'left title, e.g. "\mathrm{pp} \rightarrow \ell^{+}\ell^{-}\ (\mathrm{LO})" (ROOT math mode, see '
+                         'plot_DYplusJets__labels.py); the selection of each histogram '
                          '(jets, m_ll slice) then goes as "sel: ..." in the top left of the frame')
 parser.add_argument('--ratio-title', default=None,
                     help='y title of the ratio panel; default: "Ratio to <label of the first sample>"')
@@ -143,7 +145,9 @@ def make_plot(name, sm, output, title, x_title, y_title, x_range, logy):
             h.GetXaxis().SetRangeUser(x_min, x_max)
     h_axes[1].GetXaxis().SetTitle(x_title)
     if args.normalise:
-        y_title = '1/#sigma ' + y_title.replace(' [pb', ' [').replace('[/', '[1/').replace(' []', '')
+        # Unit area: 1/sigma dsigma/dx, unit 1/<unit of x> (pb/GeV -> 1/GeV; pb alone drops out). Math mode, as the
+        # titles of plot_DYplusJets__labels.py
+        y_title = r'1/\sigma\ ' + y_title.replace(r'[\mathrm{pb/', r'[\mathrm{1/').replace(r'\ [\mathrm{pb}]', '')
     h_axes[0].GetYaxis().SetTitle(y_title)
 
     pads[0].cd()
@@ -187,7 +191,7 @@ def make_plot(name, sm, output, title, x_title, y_title, x_range, logy):
     pads[1].cd()
     pads[1].SetGrid(0, 1)
     h_axes[1].Draw()
-    # Bins without events in the reference have no ratio: they are left empty (see dyplusjets_ratio.py)
+    # Bins without events in the reference have no ratio: they are left empty (see plot_DYplusJets__ratio.py)
     bins = defined_bins(hists[0], x_range)
     ratios = []  # ratio histograms, for ratio_range (it skips the empty bins, which are 0 there)
     drawn = []  # ROOT only draws objects that stay alive
@@ -202,7 +206,7 @@ def make_plot(name, sm, output, title, x_title, y_title, x_range, logy):
     else:
         ratio_lo, ratio_hi = ratio_range(ratios[2:] or ratios, x_min, x_max)
     plot.SetupTwoPadSplitAsRatio(pads, plot.GetAxisHist(pads[0]), plot.GetAxisHist(pads[1]),
-                                 args.ratio_title or 'Ratio to %s' % sm[0][0], True, ratio_lo, ratio_hi)
+                                 args.ratio_title or r'\mathrm{Ratio\ to}\ %s' % sm[0][0], True, ratio_lo, ratio_hi)
 
     pads[0].cd()
     pads[0].GetFrame().Draw()
@@ -239,3 +243,6 @@ for name, output_name, title, x_title, y_title, x_range in plots:
 if missing:
     # The ee and mm channels only have the fit variables, so missing histograms are normal there
     print('Not in the reference sample, skipped: ' + ' '.join(sorted(missing)))
+
+# Date of the plots in the README of the folder, so it always matches the plots
+update_readme_date(args.output_dir)
