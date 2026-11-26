@@ -146,14 +146,14 @@ yodamerge -o "${E}/Rivet.yoda" "${E}"/Rivet_*.yoda || fail "yodamerge failed"
 step "scaling files"
 ./scripts/scaling_DYplusJets.sh "${E}" "cards/${CARDS}/config.json" ${NLO_FLAG}
 
-# One ranking per histogram at c = 0.3: by the change of the rate, and by the change of the shape
-# (only bins with at least 10% of the largest SM bin, so nearly empty bins don't dominate)
+# One ranking per histogram at c = 1: by the change of the rate, and by the change of the shape
+# (over all bins with SM events)
 step "rankings"
 mkdir -p "${OUT}/ranking_rate" "${OUT}/ranking_shape"
 for f in "${E}"/scaling/scaling_zj_*.json "${E}"/scaling/scaling_ll_*.json; do
     n=$(basename "$f" .json); n=${n#scaling_}
-    python scripts/rank_operators.py "$f" 0.3 > "${OUT}/ranking_rate/$n.txt"
-    python scripts/rank_operators.py "$f" 0.3 --sort shape --min-frac 0.1 > "${OUT}/ranking_shape/$n.txt"
+    python scripts/rank_operators.py "$f" 1 > "${OUT}/ranking_rate/$n.txt"
+    python scripts/rank_operators.py "$f" 1 --sort shape > "${OUT}/ranking_shape/$n.txt"
 done
 fi
 
@@ -175,9 +175,11 @@ case "${PARTONS}" in
     *) JETS="#leq ${PARTONS: -2}" ;;      # last digit + j
 esac
 PROCESS="pp #rightarrow l^{+}l^{-} + ${JETS} (${ORDER})"
-# --top-ranked: each histogram gets the 3 leading operators of its own rate and shape rankings
+# --top-ranked: each histogram gets the 3 leading operators of its own rate and shape rankings.
+# Ratio panel 0.8-1.2: at c = 1 the leading rate effects are about 14 %
 python scripts/plot_DYplusJets.py -i "${E}" -c "cards/${CARDS}/config.json" -o "${OUT}/plots" \
     --channels ll ee mm --show-unc --title-right "${MODEL}${ENERGY:+, ${ENERGY}}" --top-ranked "${OUT}" \
+    --ratio 0.8,1.2 \
     --process-title "${PROCESS}" \
     || fail "plotting failed"
 

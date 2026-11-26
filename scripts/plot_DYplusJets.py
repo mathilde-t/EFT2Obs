@@ -10,12 +10,13 @@ Output: <outdir>/zj_<channel>_<variable>_{lin,log}.{png,pdf} and <outdir>/ll_nJe
 
 Example, from the EFT2Obs folder:
   python scripts/plot_DYplusJets.py -i $E -c cards/<sample>/config.json \\
-      --draw chj1=0.3:4 chu=0.3:2 "chj1=0.3,chu=0.3:8" --ratio 0.8,1.2
+      --draw chj1=1:4 chu=1:2 "chj1=1,chu=1:8" --ratio 0.8,1.2
 
 With --top-ranked <dir>, each histogram also gets its own leading operators, read from
 <dir>/ranking_rate/<histogram>.txt and <dir>/ranking_shape/<histogram>.txt (rank_operators.py):
 the N leading by rate as solid lines, then the N leading by shape that are not already drawn as
-dashed lines, each at the value the ranking used. driver_run_DYjets_sample.sh plots this way:
+dashed lines, each at the value the ranking used. Shapes below --min-signif standard deviations
+(default 3) or without a significance (n/a) are skipped: they are MC noise, not physics. driver_run_DYjets_sample.sh plots this way:
   python scripts/plot_DYplusJets.py -i $E -c cards/<sample>/config.json -o outputs/<sample>/plots \\
       --channels ll ee mm --show-unc --top-ranked outputs/<sample>
 """
@@ -47,10 +48,12 @@ parser.add_argument('--input-dir', '-i', required=True,
 parser.add_argument('--config', '-c', required=True, help='the config.json used for the gridpack')
 parser.add_argument('--output-dir', '-o', default=None, help='default: <input-dir>/plots_eft')
 parser.add_argument('--draw', nargs='+', default=[], metavar='PAR=X[,PAR=X]:COLOR',
-                    help='one hypothesis per argument, e.g. chj1=0.3:4 "chj1=0.3,chu=0.3:8"')
+                    help='one hypothesis per argument, e.g. chj1=1:4 "chj1=1,chu=1:8"')
 parser.add_argument('--top-ranked', metavar='DIR', default=None,
                     help='also draw the leading operators of each histogram from DIR/ranking_{rate,shape}/')
 parser.add_argument('--n-top', type=int, default=3, help='with --top-ranked: operators per ranking (default 3)')
+parser.add_argument('--min-signif', type=float, default=3.,
+                    help='with --top-ranked: smallest significance of a drawn shape, in standard deviations (default 3)')
 parser.add_argument('--channels', nargs='+', default=['ll'], choices=sorted(CHANNEL_LABELS))
 parser.add_argument('--variables', nargs='+', default=sorted(VARIABLES), choices=sorted(VARIABLES))
 parser.add_argument('--translate', default='resources/translate_root_DY.json',
@@ -77,7 +80,7 @@ if os.path.exists(args.translate):
 
 
 def parse_hypothesis(text):
-    """'chj1=0.3,chu=0.3:8' -> ({'chj1': 0.3, 'chu': 0.3}, 8, legend label)"""
+    """'chj1=1,chu=1:8' -> ({'chj1': 1.0, 'chu': 1.0}, 8, legend label)"""
     values_part, color = text.rsplit(':', 1)
     values = {}
     labels = []
@@ -98,10 +101,11 @@ TOP_RANKED_VALUES = set()
 
 
 def read_ranking(filename):
-    """rank_operators.py output -> (value of the Wilson coefficient, [(operator, total %, shape %)] in
-    ranking order). Columns: operator, total %, linear %, bin min %, bin max %, shape %, max@bin.
-    total % is the change of the whole histogram (rate), shape % the max - min spread of the
-    normalised ratio; both at this value and over all bins the ranking used."""
+    """rank_operators.py output -> (value of the Wilson coefficient, [(operator, total %, shape %, signif)] in
+    ranking order). Columns: operator, total %, linear %, bin min %, bin max %, shape %, signif, min@bin,
+    max@bin. total % is the change of the whole histogram (rate), shape % the max - min spread of the
+    ratio to the SM over the bins (bin max % - bin min %); both at this value. signif is the shape in
+    standard deviations of its MC uncertainty, None for n/a."""
     with open(filename) as f:
         lines = f.read().splitlines()
     value = float(re.search(r'c = ([^,]+),', lines[0]).group(1))
@@ -109,8 +113,9 @@ def read_ranking(filename):
     for line in lines[2:]:
         # operator lines start with the name; skip '...', 'zero in this histogram:' and its continuation
         fields = line.split()
-        if len(fields) == 7 and not line[0].isspace():
-            rows.append((fields[0], float(fields[1]), float(fields[5])))
+        if len(fields) == 9 and not line[0].isspace():
+            signif = None if fields[6] == 'n/a' else float(fields[6])
+            rows.append((fields[0], float(fields[1]), float(fields[5]), signif))
     return value, rows
 
 
@@ -118,7 +123,9 @@ def top_ranked_hypotheses(name):
     """Hypotheses for histogram `name`: N leading by rate, then N leading by shape not yet drawn.
     Each is tagged with its group, 'rate' or 'shape', so the legend can show them in two columns.
     The label gets the number the operator was ranked by: the rate change (total %, with sign) for
-    the rate operators, the shape change (max - min, %) for the shape operators."""
+    the rate operators, the shape change (max - min, %) for the shape operators.
+    Shapes below --min-signif or without significance (n/a) are skipped: there the spread of the bins
+    is within the MC uncertainty, e.g. one bin with a single event, so it is noise, not a shape."""
     chosen = []  # (operator, value, line style, group, number for the label)
     for kind, style in (('rate', 1), ('shape', 2)):
         filename = os.path.join(args.top_ranked, 'ranking_%s' % kind, '%s.txt' % name)
@@ -127,7 +134,9 @@ def top_ranked_hypotheses(name):
             continue
         value, rows = read_ranking(filename)
         new = [row for row in rows if row[0] not in [c[0] for c in chosen]]
-        for op, total, shape in new[:args.n_top]:
+        if kind == 'shape':
+            new = [row for row in new if row[3] is not None and row[3] >= args.min_signif]
+        for op, total, shape, _ in new[:args.n_top]:
             number = '%+.2f%%' % total if kind == 'rate' else '%.2f%%' % shape
             chosen.append((op, value, style, kind, number))
     hypotheses = []
